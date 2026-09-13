@@ -61,22 +61,58 @@
       letter-spacing: 0.05em;
       text-transform: uppercase;
     }
+
+    @keyframes tickerSlide {
+      0% {
+        transform: translate3d(0, 0, 0);
+      }
+      100% {
+        transform: translate3d(-50%, 0, 0);
+      }
+    }
+    .ticker-wrapper {
+      position: relative;
+      overflow: hidden;
+      white-space: nowrap;
+      mask-image: linear-gradient(to right, transparent, black 2%, black 98%, transparent);
+      -webkit-mask-image: linear-gradient(to right, transparent, black 2%, black 98%, transparent);
+    }
+    .ticker-track {
+      display: inline-flex;
+      white-space: nowrap;
+      animation: tickerSlide 35s linear infinite;
+    }
+    .ticker-wrapper:hover .ticker-track {
+      animation-play-state: paused;
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 dark:bg-corp-950 dark:text-slate-100 transition-colors duration-200 antialiased min-h-screen flex flex-col">
 
-  <!-- ================= TOP SUPABASE CONNECTION STATUS BAR ================= -->
-  <div id="config-banner" class="bg-emerald-600 text-white px-4 py-2 text-xs font-medium flex items-center justify-between z-50 shadow-sm">
-    <div class="flex items-center gap-2">
-      <span class="w-2 h-2 rounded-full bg-emerald-300 animate-ping"></span>
-      <span id="connection-status-text">Terhubung ke Supabase Cloud: <strong class="font-mono">icepulnpyqbrngpsodxp</strong></span>
+  <!-- ================= TOP RUNNING TEXT TICKER BAR ================= -->
+  <div id="running-ticker-bar" class="bg-gradient-to-r from-corp-950 via-corp-900 to-brand-950 text-white border-b border-slate-800/80 text-xs shadow-sm h-9 flex items-center relative z-50">
+    <!-- Static Badge Label -->
+    <div class="h-full px-3 sm:px-4 bg-brand-600/90 text-white flex items-center gap-1.5 shrink-0 z-10 font-bold uppercase tracking-wider text-[11px] shadow-sm">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <i data-lucide="radio" class="w-3.5 h-3.5 text-white"></i>
+      <span class="hidden sm:inline">LIVE INFO</span>
     </div>
-    <div class="flex items-center gap-3">
-      <button onclick="syncDataFromSupabase()" class="hover:underline font-bold flex items-center gap-1">
-        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Sinkronisasi
+
+    <!-- Marquee Running Text Container -->
+    <div class="ticker-wrapper flex-1 h-full flex items-center cursor-default overflow-hidden">
+      <div id="ticker-content" class="ticker-track flex items-center gap-10 text-[12px] font-medium text-slate-200">
+        <!-- Dynamic content injected via JavaScript -->
+        <span class="inline-flex items-center gap-2 text-slate-400">
+          <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Memuat informasi hari, tanggal & pengunjung...
+        </span>
+      </div>
+    </div>
+
+    <!-- Quick Refresh Button -->
+    <div class="h-full px-3 bg-corp-900/80 flex items-center shrink-0 border-l border-slate-800">
+      <button onclick="refreshVisitorAndDate()" title="Perbarui Informasi" class="text-slate-400 hover:text-white transition flex items-center gap-1 text-[11px]">
+        <i data-lucide="refresh-cw" class="w-3 h-3"></i>
       </button>
-      <span>|</span>
-      <button onclick="openConfigModal()" class="hover:underline">Ubah Kredensial</button>
     </div>
   </div>
 
@@ -101,7 +137,7 @@
         <a href="#expertise" class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">Keahlian</a>
         <a href="#projects" class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">Proyek</a>
         <a href="#clients" class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">Klien</a>
-        <a href="#experience" class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">Pengalaman</a>
+        <a href="#experience" id="nav-link-experience" class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">Pengalaman</a>
         <a href="#contact" class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">Kontak</a>
       </nav>
 
@@ -113,8 +149,8 @@
           <i data-lucide="sun" id="sun-icon" class="w-5 h-5 hidden"></i>
         </button>
 
-        <!-- Admin Access Button -->
-        <button id="admin-entry-btn" onclick="toggleAdminView()" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-700 transition">
+        <!-- Admin Access Button (Bisa disembunyikan/ditampilkan via CMS Settings) -->
+        <button id="admin-entry-btn" onclick="toggleAdminView()" class="hidden items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg border border-slate-300 dark:border-slate-700 transition">
           <i data-lucide="lock" class="w-3.5 h-3.5"></i>
           <span id="admin-btn-label">CMS Admin</span>
         </button>
@@ -133,7 +169,7 @@
       <a href="#expertise" onclick="toggleMobileMenu()" class="block py-2 text-slate-700 dark:text-slate-200">Keahlian</a>
       <a href="#projects" onclick="toggleMobileMenu()" class="block py-2 text-slate-700 dark:text-slate-200">Proyek</a>
       <a href="#clients" onclick="toggleMobileMenu()" class="block py-2 text-slate-700 dark:text-slate-200">Klien</a>
-      <a href="#experience" onclick="toggleMobileMenu()" class="block py-2 text-slate-700 dark:text-slate-200">Pengalaman</a>
+      <a href="#experience" id="mobile-nav-link-experience" onclick="toggleMobileMenu()" class="block py-2 text-slate-700 dark:text-slate-200">Pengalaman</a>
       <a href="#contact" onclick="toggleMobileMenu()" class="block py-2 text-slate-700 dark:text-slate-200">Kontak</a>
     </div>
   </header>
@@ -160,16 +196,16 @@
             <p class="text-sm sm:text-base text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
               Memadukan fondasi mendalam <strong class="text-slate-700 dark:text-slate-200">S1 Akuntansi</strong>, regulasi keuangan negara, dan arsitektur perangkat lunak untuk menghadirkan sistem informasi yang akuntabel, patuh audit, dan siap pakai.
             </p>
-            <!-- Hero CTAs -->
-            <div class="flex flex-wrap gap-4 pt-2">
-              <a href="#projects" class="px-6 py-3 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-md hover:shadow-lg transition flex items-center gap-2">
-                <i data-lucide="briefcase" class="w-4 h-4"></i> Lihat Proyek
+            <!-- Hero CTAs with WhatsApp & Email Direct Actions -->
+            <div class="flex flex-wrap gap-3 pt-2">
+              <a id="hero-cta-wa" href="https://wa.me/6281234567890?text=Halo%20Senior%20IT%20Consultant,%20saya%20tertarik%20berdiskusi%20terkait%20kebutuhan%20sistem%20informasi." target="_blank" class="px-5 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-md hover:shadow-lg transition flex items-center gap-2">
+                <i data-lucide="message-circle" class="w-4 h-4"></i> Chat WhatsApp
               </a>
-              <a href="#about" class="px-6 py-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 font-semibold text-sm text-slate-700 dark:text-slate-200 transition flex items-center gap-2">
-                <i data-lucide="user" class="w-4 h-4"></i> Tentang Saya
+              <a id="hero-cta-email" href="mailto:consultant@example.com?subject=Konsultasi%20Sistem%20Informasi&body=Halo%20Senior%20IT%20Consultant,%0A%0ASaya%20ingin%20berkonsultasi%20mengenai%20perancangan/implementasi%20sistem%20informasi." class="px-5 py-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 font-semibold text-sm text-slate-700 dark:text-slate-200 transition flex items-center gap-2">
+                <i data-lucide="mail" class="w-4 h-4 text-brand-600"></i> Kirim Email
               </a>
-              <a href="#contact" class="px-6 py-3 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-semibold text-sm hover:opacity-90 transition flex items-center gap-2">
-                <i data-lucide="mail" class="w-4 h-4"></i> Hubungi Saya
+              <a href="#projects" class="px-5 py-3 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-md transition flex items-center gap-2">
+                <i data-lucide="briefcase" class="w-4 h-4"></i> Eksplor Proyek
               </a>
             </div>
           </div>
@@ -368,12 +404,32 @@
       </div>
     </section>
 
-    <!-- 6. CLIENTS / INSTANSI SECTION -->
+    <!-- 6. CLIENTS / INSTANSI SECTION (HIRARKI WILAYAH & MULTI PROYEK) -->
     <section id="clients" class="py-16 sm:py-20 bg-white dark:bg-corp-900 border-b border-slate-200 dark:border-slate-800">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="max-w-3xl mb-12">
-          <h2 class="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 mb-2">Klien & Mitra Strategis</h2>
-          <h3 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">Instansi Pemerintah & Organisasi Pengguna</h3>
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+          <div>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 mb-2">Klien & Mitra Strategis</h2>
+            <h3 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">Instansi Pemerintah & Sektor Swasta</h3>
+            <p class="text-slate-500 text-xs sm:text-sm mt-1">Struktur sebaran implementasi sistem informasi berdasarkan wilayah provinsi, kabupaten/kota, dan instansi.</p>
+          </div>
+          <!-- Client Segment Switcher Tabs -->
+          <div class="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-corp-950 border border-slate-200 dark:border-slate-800 text-xs font-semibold">
+            <button onclick="switchClientSegment('all')" id="client-tab-all" class="px-4 py-2 rounded-lg bg-white dark:bg-corp-900 shadow-sm text-brand-600">Semua Klien</button>
+            <button onclick="switchClientSegment('Pemerintah')" id="client-tab-gov" class="px-4 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:text-brand-600">Instansi Pemerintah</button>
+            <button onclick="switchClientSegment('Swasta')" id="client-tab-private" class="px-4 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:text-brand-600">Sektor Swasta</button>
+          </div>
+        </div>
+
+        <!-- Filter Wilayah & Pencarian Klien -->
+        <div class="mb-6 flex flex-col sm:flex-row gap-3">
+          <div class="relative flex-1">
+            <i data-lucide="map-pin" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5"></i>
+            <input type="text" id="client-search-input" oninput="renderClients()" placeholder="Cari nama provinsi, kabupaten/kota, atau instansi..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-corp-950 text-xs focus:ring-2 focus:ring-brand-500 outline-none" />
+          </div>
+          <select id="client-province-filter" onchange="renderClients()" class="py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-corp-950 text-xs focus:ring-2 focus:ring-brand-500 outline-none">
+            <option value="ALL">Semua Provinsi</option>
+          </select>
         </div>
 
         <div id="clients-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -396,7 +452,7 @@
       </div>
     </section>
 
-    <!-- 8. CTA SECTION (MANAGED DYNAMICALLY) -->
+    <!-- 8. CTA SECTION -->
     <section id="cta-section" class="py-16 sm:py-20 bg-gradient-to-r from-brand-900 via-corp-900 to-slate-950 text-white relative overflow-hidden">
       <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 space-y-6">
         <h2 id="cta-headline" class="text-2xl sm:text-4xl font-extrabold tracking-tight">Memiliki Kebutuhan Sistem Informasi?</h2>
@@ -404,11 +460,14 @@
           Diskusikan kebutuhan digitalisasi, penataan regulasi, dan implementasi software organisasi Anda bersama Senior IT Consultant.
         </p>
         <div class="flex flex-wrap justify-center gap-4 pt-2">
-          <a id="cta-primary-btn" href="#contact" class="px-6 py-3 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm shadow-lg transition">
-            Hubungi Saya
+          <a id="cta-wa-btn" href="https://wa.me/6281234567890?text=Halo%20Senior%20IT%20Consultant,%20saya%20ingin%20berkonsultasi%20terkait%20kebutuhan%20sistem%20organisasi%20kami." target="_blank" class="px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-lg transition flex items-center gap-2">
+            <i data-lucide="message-circle" class="w-4 h-4"></i> WhatsApp Langsung
           </a>
-          <a id="cta-secondary-btn" href="#projects" class="px-6 py-3 rounded-lg bg-slate-800/80 hover:bg-slate-800 text-slate-200 border border-slate-700 font-semibold text-sm transition">
-            Eksplorasi Portofolio
+          <a id="cta-email-btn" href="mailto:consultant@example.com?subject=Permintaan%20Konsultasi%20Sistem&body=Halo%20Senior%20IT%20Consultant," class="px-6 py-3 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-lg transition flex items-center gap-2">
+            <i data-lucide="mail" class="w-4 h-4"></i> Kirim Email Resmi
+          </a>
+          <a id="cta-secondary-btn" href="#projects" class="px-6 py-3 rounded-lg bg-slate-800/80 hover:bg-slate-800 text-slate-200 border border-slate-700 font-semibold text-sm transition flex items-center gap-2">
+            <i data-lucide="layers" class="w-4 h-4"></i> Eksplorasi Portofolio
           </a>
         </div>
       </div>
@@ -477,18 +536,22 @@
       <div class="text-center sm:text-left space-y-1">
         <p class="font-bold text-white text-sm">Senior IT Consultant & System Implementator</p>
         <p>Bridging Business Processes, Information Systems & Digital Solutions.</p>
-        <p class="text-slate-500">Connected to Supabase Serverless & Ready for GitHub Pages.</p>
+        <p class="text-slate-500">&copy; Hak Cipta Dilindungi Undang-Undang. Seluruh hak cipta portofolio dan sistem informasi.</p>
       </div>
       <div class="flex items-center gap-6">
         <a href="#home" class="hover:text-white transition">Beranda</a>
         <a href="#projects" class="hover:text-white transition">Proyek</a>
+        <a href="#clients" class="hover:text-white transition">Klien</a>
         <a href="#about" class="hover:text-white transition">Profil</a>
-        <button onclick="openConfigModal()" class="hover:text-white transition underline">Koneksi Supabase</button>
+        <a href="#experience" id="footer-link-experience" class="hover:text-white transition">Pengalaman</a>
+        <a href="#contact" class="hover:text-white transition">Kontak</a>
+        <!-- Tautan Rahasia Footer untuk Admin -->
+        <a href="javascript:void(0)" onclick="toggleAdminView()" class="opacity-40 hover:opacity-100 transition text-[10px] text-slate-500" title="Akses Administrator">⚙️ Portal</a>
       </div>
     </div>
   </footer>
 
-  <!-- ================= PROJECT DETAIL MODAL (RESPECTS VISIBILITY RULES) ================= -->
+  <!-- ================= PROJECT DETAIL MODAL ================= -->
   <div id="project-detail-modal" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm overflow-y-auto p-4 sm:p-6 flex justify-center items-start">
     <div class="bg-white dark:bg-corp-900 w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 my-8 overflow-hidden transform transition-all">
       <!-- Modal Header -->
@@ -508,7 +571,7 @@
         </button>
       </div>
 
-      <!-- Modal Body (Controlled by Content Visibility flags) -->
+      <!-- Modal Body -->
       <div class="p-6 sm:p-8 space-y-6 text-sm text-slate-700 dark:text-slate-300 max-h-[75vh] overflow-y-auto">
         <!-- Overview Short Description -->
         <div>
@@ -516,13 +579,13 @@
           <p id="modal-project-short-desc" class="text-base font-medium text-slate-800 dark:text-slate-100 leading-relaxed"></p>
         </div>
 
-        <!-- My Role Section (Optional) -->
+        <!-- My Role Section -->
         <div id="modal-role-section">
           <h4 class="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 mb-2">Peran & Kontribusi Saya</h4>
           <div id="modal-project-roles" class="flex flex-wrap gap-2"></div>
         </div>
 
-        <!-- Problem & Solution Block (Optional) -->
+        <!-- Problem & Solution Block -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div id="modal-problem-section" class="p-4 rounded-xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30">
             <h4 class="font-bold text-rose-700 dark:text-rose-400 mb-1 text-xs uppercase tracking-wider flex items-center gap-1.5">
@@ -550,19 +613,32 @@
           <p id="modal-project-objective" class="text-xs sm:text-sm"></p>
         </div>
 
-        <!-- Key Features (Optional) -->
+        <!-- Key Features -->
         <div id="modal-features-section">
           <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Fitur-Fitur Kunci</h4>
           <ul id="modal-project-features" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs"></ul>
         </div>
 
-        <!-- Technology Stack (Optional) -->
+        <!-- Technology Stack -->
         <div id="modal-tech-section">
           <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Teknologi & Infrastruktur</h4>
           <div id="modal-project-tech" class="flex flex-wrap gap-2 text-xs"></div>
         </div>
 
-        <!-- Result / Impact (Optional) -->
+        <!-- Q & A SEKTOR PROYEK -->
+        <div id="modal-qna-section" class="space-y-3 pt-2">
+          <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 flex items-center gap-2">
+              <i data-lucide="help-circle" class="w-4 h-4"></i> Tanya Jawab Proyek (Q & A)
+            </h4>
+            <span id="modal-qna-counter" class="text-[11px] font-mono text-slate-400"></span>
+          </div>
+          <div id="modal-project-qna-list" class="space-y-2.5">
+            <!-- Injected dynamically via JS -->
+          </div>
+        </div>
+
+        <!-- Result / Impact -->
         <div id="modal-result-section" class="p-4 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40">
           <h4 class="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 mb-1 flex items-center gap-1.5">
             <i data-lucide="trending-up" class="w-4 h-4"></i> Dampak & Hasil Nyata
@@ -570,7 +646,7 @@
           <p id="modal-project-result" class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 font-medium"></p>
         </div>
 
-        <!-- Project Links (Optional) -->
+        <!-- Project Links -->
         <div id="modal-url-section" class="pt-2 flex gap-3">
           <a id="modal-project-demo-btn" href="#" target="_blank" class="px-4 py-2 rounded-lg bg-brand-600 text-white text-xs font-semibold flex items-center gap-1.5">
             <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Buka URL Aplikasi
@@ -609,7 +685,7 @@
       </div>
 
       <!-- Dashboard Stats Cards -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4">
+      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
         <div class="bg-white dark:bg-corp-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
           <span class="text-xs text-slate-400 block font-medium">Total Proyek</span>
           <span id="stat-total-projects" class="text-2xl font-black text-slate-800 dark:text-white">18</span>
@@ -624,7 +700,7 @@
         </div>
         <div class="bg-white dark:bg-corp-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
           <span class="text-xs text-slate-400 block font-medium">Klien Instansi</span>
-          <span id="stat-total-clients" class="text-2xl font-black text-slate-800 dark:text-white">6</span>
+          <span id="stat-total-clients" class="text-2xl font-black text-slate-800 dark:text-white">8</span>
         </div>
         <div class="bg-white dark:bg-corp-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
           <span class="text-xs text-slate-400 block font-medium">Pengalaman</span>
@@ -634,17 +710,13 @@
           <span class="text-xs text-slate-400 block font-medium">Kompetensi</span>
           <span id="stat-total-skills" class="text-2xl font-black text-slate-800 dark:text-white">13</span>
         </div>
-        <div class="bg-white dark:bg-corp-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-          <span class="text-xs text-emerald-500 block font-medium">Supabase Cloud</span>
-          <span id="stat-total-audits" class="text-xs font-bold text-emerald-600">Connected</span>
-        </div>
       </div>
 
       <!-- CMS Tabs -->
       <div class="bg-white dark:bg-corp-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <div class="flex overflow-x-auto border-b border-slate-200 dark:border-slate-800 text-xs font-semibold p-2 gap-1 bg-slate-50 dark:bg-corp-950">
           <button onclick="switchAdminTab('projects')" id="tab-btn-projects" class="px-4 py-2 rounded-lg bg-white dark:bg-corp-900 shadow-sm text-brand-600 font-bold">Projects CRUD</button>
-          <button onclick="switchAdminTab('clients')" id="tab-btn-clients" class="px-4 py-2 rounded-lg hover:bg-white/60 dark:hover:bg-corp-900/60 text-slate-600 dark:text-slate-300">Clients</button>
+          <button onclick="switchAdminTab('clients')" id="tab-btn-clients" class="px-4 py-2 rounded-lg hover:bg-white/60 dark:hover:bg-corp-900/60 text-slate-600 dark:text-slate-300">Clients & Mapping</button>
           <button onclick="switchAdminTab('profile')" id="tab-btn-profile" class="px-4 py-2 rounded-lg hover:bg-white/60 dark:hover:bg-corp-900/60 text-slate-600 dark:text-slate-300">Profile & CTA</button>
           <button onclick="switchAdminTab('audit')" id="tab-btn-audit" class="px-4 py-2 rounded-lg hover:bg-white/60 dark:hover:bg-corp-900/60 text-slate-600 dark:text-slate-300">Audit Trail</button>
           <button onclick="switchAdminTab('settings')" id="tab-btn-settings" class="px-4 py-2 rounded-lg hover:bg-white/60 dark:hover:bg-corp-900/60 text-slate-600 dark:text-slate-300">Koneksi & Kredensial</button>
@@ -684,29 +756,63 @@
         <!-- TAB 2: CLIENTS MANAGEMENT -->
         <div id="tab-content-clients" class="p-6 space-y-4 hidden">
           <div class="flex justify-between items-center">
-            <h3 class="font-bold text-base text-slate-800 dark:text-white">Daftar Klien / Instansi</h3>
-            <button onclick="alert('Fitur Client Management terhubung ke tabel clients Supabase.')" class="px-3 py-1.5 rounded-lg bg-brand-600 text-white text-xs font-semibold flex items-center gap-1">
-              <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Klien
+            <div>
+              <h3 class="font-bold text-base text-slate-800 dark:text-white">Daftar Klien / Instansi</h3>
+              <p class="text-xs text-slate-500">Kelola daftar klien pemerintah dan swasta beserta mapping proyek yang digunakan.</p>
+            </div>
+            <button onclick="openClientFormModal()" class="px-3.5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow">
+              <i data-lucide="plus" class="w-4 h-4"></i> Tambah Klien Baru
             </button>
           </div>
-          <div id="admin-clients-list" class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs"></div>
+          <div id="admin-clients-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+            <!-- Injected via JS -->
+          </div>
         </div>
 
         <!-- TAB 3: PROFILE & CTA -->
         <div id="tab-content-profile" class="p-6 space-y-4 hidden">
-          <h3 class="font-bold text-base text-slate-800 dark:text-white">Pengaturan Profil & CTA</h3>
-          <p class="text-xs text-slate-500">Edit informasi hero, latar belakang, dan tombol Call-To-Action yang tersimpan di Supabase.</p>
+          <h3 class="font-bold text-base text-slate-800 dark:text-white">Pengaturan Profil, Visibilitas & Komunikasi CTA</h3>
+          <p class="text-xs text-slate-500">Sesuaikan narasi hero, nomor WhatsApp, email, dan visibilitas section web publik.</p>
+          
+          <!-- Visibilitas Modul Publik -->
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-corp-950 border border-slate-200 dark:border-slate-800 space-y-2">
+            <h4 class="font-bold text-xs uppercase tracking-wider text-brand-600 dark:text-brand-400">Pengaturan Visibilitas Web Publik</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <label class="flex items-center gap-2 font-medium cursor-pointer">
+                <input type="checkbox" id="setting-show-experience" class="rounded text-brand-600 focus:ring-brand-500" checked />
+                <span>Tampilkan Section <strong>Pengalaman Kerja</strong> di Web Publik</span>
+              </label>
+              <label class="flex items-center gap-2 font-medium cursor-pointer">
+                <input type="checkbox" id="setting-show-admin-btn" class="rounded text-brand-600 focus:ring-brand-500" />
+                <span>Tampilkan Tombol <strong>"CMS Admin"</strong> di Navbar Publik</span>
+              </label>
+            </div>
+            <p class="text-[11px] text-slate-400 italic">Catatan: Jika tombol CMS disembunyikan, Anda tetap bisa membuka CMS dengan shortcut <strong>Ctrl + Shift + A</strong>, atau klik logo "IT" 3 kali.</p>
+          </div>
+
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div>
               <label class="block font-semibold mb-1">Hero Professional Statement</label>
-              <input type="text" id="setting-hero-stmt" class="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950" value="Bridging Business Processes, Information Systems & Digital Solutions." />
+              <input type="text" id="setting-hero-stmt" class="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950" value="Bridging Business Processes, Information Systems & Digital Solutions." />
             </div>
             <div>
               <label class="block font-semibold mb-1">Headline CTA</label>
-              <input type="text" id="setting-cta-headline" class="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950" value="Memiliki Kebutuhan Sistem Informasi & Digitalisasi?" />
+              <input type="text" id="setting-cta-headline" class="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950" value="Memiliki Kebutuhan Sistem Informasi & Digitalisasi?" />
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Nomor WhatsApp (Gunakan kode negara, misal: 6281234567890)</label>
+              <input type="text" id="setting-wa-number" class="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950 font-mono" value="6281234567890" />
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Alamat Email Resmi</label>
+              <input type="email" id="setting-email-addr" class="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950" value="consultant@example.com" />
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block font-semibold mb-1">Template Pesan WhatsApp Default</label>
+              <input type="text" id="setting-wa-message" class="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950" value="Halo Senior IT Consultant, saya ingin berdiskusi perihal kebutuhan sistem informasi di organisasi kami." />
             </div>
           </div>
-          <button onclick="saveProfileSettings()" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-xs font-bold">Simpan Pengaturan</button>
+          <button onclick="saveProfileSettings()" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-bold shadow">Simpan Pengaturan Profil & Kontak</button>
         </div>
 
         <!-- TAB 4: AUDIT TRAIL LOG -->
@@ -738,16 +844,16 @@
         <!-- TAB 5: SETTINGS & SUPABASE CREDENTIALS -->
         <div id="tab-content-settings" class="p-6 space-y-6 hidden">
           <div>
-            <h3 class="font-bold text-base text-slate-800 dark:text-white">Konfigurasi Supabase Aktif</h3>
-            <p class="text-xs text-slate-500">Kredensial Project URL dan Anon Key sudah terpasang dan siap digunakan.</p>
+            <h3 class="font-bold text-base text-slate-800 dark:text-white">Konfigurasi Database Serverless</h3>
+            <p class="text-xs text-slate-500">Kredensial API terhubung secara otomatis ke database cloud.</p>
           </div>
           <div class="space-y-4 max-w-xl text-xs">
             <div>
-              <label class="block font-semibold mb-1">Supabase Project URL</label>
+              <label class="block font-semibold mb-1">Project Endpoint URL</label>
               <input type="text" id="settings-supabase-url" class="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950 font-mono text-xs" />
             </div>
             <div>
-              <label class="block font-semibold mb-1">Supabase Anon Public Key</label>
+              <label class="block font-semibold mb-1">Public Client Key</label>
               <textarea id="settings-supabase-key" rows="3" class="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950 font-mono text-xs"></textarea>
             </div>
             <button onclick="saveSupabaseConfig()" class="px-4 py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-bold">Simpan Konfigurasi & Muat Ulang</button>
@@ -758,7 +864,7 @@
     </div>
   </div>
 
-  <!-- ================= PROJECT FORM MODAL (PRD STANDARD FORM) ================= -->
+  <!-- ================= PROJECT FORM MODAL ================= -->
   <div id="project-form-modal" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm overflow-y-auto p-4 sm:p-6 flex justify-center items-start">
     <div class="bg-white dark:bg-corp-900 w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 my-6 overflow-hidden">
       <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-corp-950">
@@ -775,11 +881,11 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block font-semibold mb-1">Nama Aplikasi *</label>
-              <input type="text" id="form-project-name" required class="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950" />
+              <input type="text" id="form-project-name" oninput="autoGenerateSlugIfEmpty()" required class="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950" />
             </div>
             <div>
-              <label class="block font-semibold mb-1">Slug URL *</label>
-              <input type="text" id="form-project-slug" required class="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950" />
+              <label class="block font-semibold mb-1">Slug URL <span class="text-slate-400 font-normal">(Opsional - Otomatis jika kosong)</span></label>
+              <input type="text" id="form-project-slug" placeholder="e.g. sipbos-keuangan" class="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950 font-mono text-xs" />
             </div>
           </div>
           <div>
@@ -862,23 +968,33 @@
           </div>
         </div>
 
-        <!-- 3. Contribution & Impact -->
-        <div class="space-y-3">
-          <h4 class="font-bold text-sm text-brand-600 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-1">3. Contribution & Impact</h4>
-          <div>
-            <label class="block font-semibold mb-1">Peran Saya (Pisahkan koma)</label>
-            <input type="text" id="form-project-roles" value="Senior IT Consultant, System Analyst, Implementator" class="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950" />
+        <!-- 3. Q & A PROYEK -->
+        <div class="space-y-3 p-4 rounded-xl bg-slate-50 dark:bg-corp-950 border border-slate-200 dark:border-slate-800">
+          <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+            <div>
+              <h4 class="font-bold text-sm text-brand-600 uppercase tracking-wider">3. Tanya Jawab (Q & A) Proyek</h4>
+              <p class="text-[11px] text-slate-500">Maksimal 10 tanya-jawab seputar arsitektur, tantangan regulasi, alur implementasi, atau solusi spesifik.</p>
+            </div>
+            <button type="button" onclick="addQnAItemForm()" id="btn-add-qna" class="px-3 py-1 rounded bg-brand-600 hover:bg-brand-700 text-white font-bold text-[11px] flex items-center gap-1 shadow">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Q&A (<span id="qna-count-badge">0/10</span>)
+            </button>
           </div>
-          <div>
+
+          <!-- Dynamic QnA Container -->
+          <div id="form-qna-container" class="space-y-3 pt-1">
+            <!-- Injected via JS -->
+          </div>
+
+          <div class="pt-2">
             <label class="block font-semibold mb-1">Dampak Nyata / Result & Impact</label>
-            <textarea id="form-project-result" rows="2" class="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950"></textarea>
+            <textarea id="form-project-result" rows="2" placeholder="e.g. Waktu pelaporan dipangkas dari 14 hari menjadi 2 hari kerja..." class="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-corp-900"></textarea>
           </div>
         </div>
 
         <!-- 4. Content Visibility Flags -->
         <div class="space-y-3 p-4 rounded-xl bg-slate-50 dark:bg-corp-950 border border-slate-200 dark:border-slate-800">
           <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">Pengaturan Visibilitas Konten Publik</h4>
-          <p class="text-xs text-slate-400">Data tersimpan di Supabase, namun Anda mengontrol bagian mana yang ditampilkan kepada publik.</p>
+          <p class="text-xs text-slate-400">Data tersimpan aman di database, namun Anda mengontrol bagian mana yang ditampilkan kepada publik.</p>
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
             <label class="flex items-center gap-2"><input type="checkbox" id="form-vis-background" /> Tampilkan Background</label>
             <label class="flex items-center gap-2"><input type="checkbox" id="form-vis-problem" checked /> Tampilkan Problem</label>
@@ -896,7 +1012,7 @@
             <label class="flex items-center gap-2 font-bold"><input type="checkbox" id="form-project-featured" /> Featured di Home</label>
           </div>
           <div>
-            <label class="block font-semibold mb-1 text-rose-500">Internal Notes (Hanya terlihat oleh Administrator, dilindungi RLS)</label>
+            <label class="block font-semibold mb-1 text-rose-500">Internal Notes (Hanya terlihat oleh Administrator)</label>
             <textarea id="form-project-notes" rows="2" placeholder="Catatan teknis arsitektur, SLA, atau nomor kontak internal..." class="w-full p-2 rounded border border-rose-200 dark:border-rose-900/50 bg-rose-50/20 dark:bg-rose-950/20"></textarea>
           </div>
         </div>
@@ -910,14 +1026,14 @@
     </div>
   </div>
 
-  <!-- ================= AUTH MODAL (SUPABASE AUTH) ================= -->
+  <!-- ================= AUTH MODAL ================= -->
   <div id="auth-modal" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex justify-center items-center p-4">
     <div class="bg-white dark:bg-corp-900 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
       <div class="flex justify-between items-center">
         <h3 class="font-bold text-lg text-slate-900 dark:text-white">Autentikasi Administrator</h3>
         <button onclick="closeAuthModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
-      <p class="text-xs text-slate-500">Masuk menggunakan email dan password administrator Supabase Auth Anda.</p>
+      <p class="text-xs text-slate-500">Masuk menggunakan email dan password administrator Anda.</p>
       
       <form onsubmit="handleAuthLogin(event)" class="space-y-3 text-xs">
         <div>
@@ -933,28 +1049,70 @@
     </div>
   </div>
 
-  <!-- ================= SUPABASE CONFIGURATION MODAL ================= -->
-  <div id="config-modal" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex justify-center items-center p-4">
-    <div class="bg-white dark:bg-corp-900 w-full max-w-lg rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-      <div class="flex justify-between items-center">
-        <h3 class="font-bold text-lg text-slate-900 dark:text-white">Pengaturan Kredensial Supabase</h3>
-        <button onclick="closeConfigModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
-      </div>
-      <p class="text-xs text-slate-500">Kredensial proyek Supabase Anda aktif dan tersinkronisasi otomatis.</p>
-      <div class="space-y-3 text-xs">
+  <!-- ================= CLIENT FORM MODAL ================= -->
+  <div id="client-form-modal" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm overflow-y-auto p-4 sm:p-6 flex justify-center items-center">
+    <div class="bg-white dark:bg-corp-900 w-full max-w-xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-6">
+      <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-corp-950">
         <div>
-          <label class="block font-semibold mb-1">Supabase URL</label>
-          <input type="text" id="cfg-url" class="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950 font-mono" />
+          <h3 id="client-form-title" class="font-bold text-base sm:text-lg text-slate-900 dark:text-white">Tambah Klien Baru</h3>
+          <p class="text-[11px] text-slate-400">Tentukan wilayah hirarki dan pilih sistem yang diimplementasikan.</p>
         </div>
-        <div>
-          <label class="block font-semibold mb-1">Supabase Anon Key</label>
-          <textarea id="cfg-key" rows="3" class="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950 font-mono"></textarea>
-        </div>
-        <div class="flex justify-end gap-2 pt-2">
-          <button onclick="closeConfigModal()" class="px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-800 font-semibold">Batal</button>
-          <button onclick="saveConfigFromModal()" class="px-4 py-2 rounded-lg bg-brand-600 text-white font-bold">Simpan & Muat Ulang</button>
-        </div>
+        <button onclick="closeClientFormModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
+      <form onsubmit="handleClientFormSubmit(event)" class="p-6 space-y-4 text-xs text-slate-700 dark:text-slate-300 max-h-[80vh] overflow-y-auto">
+        <input type="hidden" id="form-client-id" />
+        
+        <!-- Wilayah: Provinsi & Kabupaten/Kota -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-slate-50 dark:bg-corp-950 border border-slate-200 dark:border-slate-800">
+          <div>
+            <label class="block font-semibold mb-1 text-slate-800 dark:text-slate-200">1. Nama Provinsi *</label>
+            <input type="text" id="form-client-province" required placeholder="misal: Kepulauan Riau / Jawa Timur" class="w-full p-2.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-corp-900 text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold mb-1 text-slate-800 dark:text-slate-200">2. Nama Kabupaten / Kota *</label>
+            <input type="text" id="form-client-city" required placeholder="misal: Kota Batam / Kab. Sidoarjo" class="w-full p-2.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-corp-900 text-xs" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold mb-1 text-slate-800 dark:text-slate-200">3. Nama Instansi / Perusahaan *</label>
+          <input type="text" id="form-client-name" required placeholder="misal: Badan Pengelola Keuangan dan Aset Daerah" class="w-full p-2.5 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950 text-xs" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold mb-1 text-slate-800 dark:text-slate-200">Klasifikasi Sektor *</label>
+            <select id="form-client-sector" required class="w-full p-2.5 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950 text-xs">
+              <option value="Pemerintah">Instansi Pemerintah (Birokrasi / BLUD / DPRD)</option>
+              <option value="Swasta">Sektor Swasta / Korporasi / Vendor</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold mb-1 text-slate-800 dark:text-slate-200">Logo URL (Opsional)</label>
+            <input type="text" id="form-client-logo" placeholder="https://domain.com/logo.png" class="w-full p-2.5 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950 font-mono text-[11px]" />
+          </div>
+        </div>
+
+        <!-- Checkbox Multi-Select Proyek Terpasang -->
+        <div class="space-y-2 p-3.5 rounded-xl bg-slate-50 dark:bg-corp-950 border border-slate-200 dark:border-slate-800">
+          <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+            <div>
+              <label class="block font-bold text-xs text-brand-600 dark:text-brand-400">Pilih Proyek yang Diimplementasikan *</label>
+              <span class="text-[11px] text-slate-500">Centang satu atau lebih proyek yang digunakan di instansi ini.</span>
+            </div>
+            <span id="form-selected-projects-count" class="text-[11px] font-semibold px-2 py-0.5 rounded bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300 font-mono">0 Proyek</span>
+          </div>
+          
+          <div id="form-client-projects-selector" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-1 text-xs">
+            <!-- Injected via JavaScript checkboxes -->
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <button type="button" onclick="closeClientFormModal()" class="px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-800 font-semibold">Batal</button>
+          <button type="submit" class="px-5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-bold shadow">Simpan Klien</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -964,13 +1122,13 @@
   <!-- ================= JAVASCRIPT APPLICATION CORE ================= -->
   <script>
     // ------------------------------------------------------------------------
-    // DEFAULT SUPABASE CREDENTIALS (HARDCODED AS REQUESTED)
+    // DEFAULT CONFIGURATION CONSTANTS
     // ------------------------------------------------------------------------
     const DEFAULT_SUPABASE_URL = "https://icepulnpyqbrngpsodxp.supabase.co";
     const DEFAULT_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljZXB1bG5weXFicm5ncHNvZHhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyNjY3NzYsImV4cCI6MjEwNDg0Mjc3Nn0.ega9WaKzOTBvWnk51ucMsMbQF43d4gAbpbq3XwxzDA0";
 
     // ------------------------------------------------------------------------
-    // SEED DATA FALLBACK (18 Proyek Bawaan Sesuai PRD)
+    // SEED DATA: 18 PROYEK LENGKAP & VALID
     // ------------------------------------------------------------------------
     const INITIAL_PROJECTS = [
       {
@@ -985,13 +1143,18 @@
         key_features: ['Penyusunan RKAS Digital', 'Verifikasi SPJ Online', 'Buku Pembantu Pajak', 'Export Format Standar'],
         technology: ['PostgreSQL', 'PHP', 'Tailwind CSS'],
         result_impact: 'Waktu rekonsiliasi SPJ dipangkas 70% dan nihil temuan audit berulang.',
+        qna_items: [
+          { q: 'Bagaimana sistem mencegah kesalahan kode rekening belanja BOS?', a: 'Sistem menerapkan aturan validasi ketat berdasarkan juknis BOS Kemendikbud, di mana transaksi tidak dapat disimpan jika tidak sesuai pagu RKAS yang disahkan.' },
+          { q: 'Apakah sistem dapat mengakomodir sekolah di daerah minim sinyal?', a: 'Disediakan modul entri offline berbasis cache terenkripsi yang secara otomatis menyinkronkan data ke server kabupaten saat koneksi pulih.' },
+          { q: 'Bagaimana peran latar belakang S1 Akuntansi dalam proyek ini?', a: 'Merancang bagan akun standar (CoA), validasi bukti potong pajak PPh/PPN sekolah, serta pemetaan jurnal otomatis ke Laporan Realisasi Anggaran dinas.' }
+        ],
         is_featured: true, is_published: true, is_deleted: false,
         show_background: false, show_problem: true, show_solution: true, show_objective: false, show_my_role: true, show_features: true, show_technology: true, show_result: true, show_project_url: false
       },
       {
         id: '2', name: 'SIPBLUD TUKD-ASET-AKUNTANSI', slug: 'sipblud-tukd-aset-akuntansi',
         short_description: 'Sistem tata usaha keuangan daerah, inventaris aset, dan pelaporan akuntansi akrual untuk RSUD & Puskesmas BLUD.',
-        client: 'Dinas Kesehatan & RSUD', category: 'BLUD', year: '2023', status: 'PRODUCTION', app_type: 'Integrated System', access_type: 'MULTI ROLE',
+        client: 'Dinas Kesehatan & RSUD / Puskesmas BLUD', category: 'BLUD', year: '2023', status: 'PRODUCTION', app_type: 'Integrated System', access_type: 'MULTI ROLE',
         background: 'Permendagri 79/2018 mewajibkan BLUD menyusun laporan berbasis SAK sekaligus konsolidasi SAP.',
         problem: 'Pencatatan manual di RSUD memicu keterlambatan laporan dan selisih saldo aset.',
         solution: 'Membangun arsitektur terintegrasi dengan mesin jurnal otomatis berbasis S1 Akuntansi.',
@@ -1000,71 +1163,86 @@
         key_features: ['Modul TUKD BLUD', 'Penyusutan Aset Otomatis', 'Jurnal Akrual SAK & SAP', 'Laporan Keuangan Otomatis'],
         technology: ['PostgreSQL', 'Vue.js', 'Node.js', 'Redis'],
         result_impact: 'Penyusunan laporan keuangan BLUD tuntas dalam 5 hari kerja pasca tutup buku.',
+        qna_items: [
+          { q: 'Bagaimana sistem menyelesaikan kewajiban ganda SAK vs SAP di BLUD?', a: 'Engine akuntansi menghasilkan jurnal ganda secara otomatis: satu set berbasis Standar Akuntansi Keuangan (SAK) untuk audit independen, dan satu set berbasis SAP untuk konsolidasi LKPD Pemda.' },
+          { q: 'Berapa banyak faskes yang berhasil di-deploy secara serentak?', a: 'Telah berhasil diterapkan pada 1 RSUD dan 24 Puskesmas dengan database multi-tenant terpusat.' }
+        ],
         is_featured: true, is_published: true, is_deleted: false,
         show_background: false, show_problem: true, show_solution: true, show_objective: false, show_my_role: true, show_features: true, show_technology: true, show_result: true, show_project_url: false
       },
       {
         id: '3', name: 'BEND ONLINE', slug: 'bend-online',
         short_description: 'Aplikasi penatausahaan buku kas umum (BKU) dan transaksi perbendaharaan bendahara pengeluaran secara daring.',
-        client: 'Badan Pengelola Keuangan dan Aset Daerah', category: 'Keuangan', year: '2022', status: 'PRODUCTION', app_type: 'Web Application', access_type: 'INTERNAL',
+        client: 'Badan Pengelola Keuangan & Aset Daerah (BPKAD)', category: 'Keuangan', year: '2022', status: 'PRODUCTION', app_type: 'Web Application', access_type: 'INTERNAL',
         problem: 'Rekonsiliasi kas manual sering memicu selisih pembukuan di akhir tahun.',
         solution: 'Platform digitalisasi BKU terintegrasi bank persepsi.',
         my_role: ['System Analyst', 'Implementator', 'Trainer'],
         key_features: ['Input BKU Realtime', 'Hitung Pajak Otomatis', 'Berita Acara Kas'],
         technology: ['PostgreSQL', 'CodeIgniter', 'Bootstrap'],
         result_impact: 'Akurasi pembukuan kas mencapai 99.8% di seluruh OPD.',
+        qna_items: [
+          { q: 'Apakah sistem mendukung rekonsiliasi otomatis dengan rekening koran bank?', a: 'Ya, modul parsing mutasi rekening bank persepsi mencocokkan nomor SP2D dan nominal secara otomatis setiap hari kerja.' }
+        ],
         is_featured: false, is_published: true, is_deleted: false,
         show_background: false, show_problem: true, show_solution: true, show_objective: false, show_my_role: true, show_features: true, show_technology: true, show_result: true, show_project_url: false
       },
       {
         id: '4', name: 'SIMREK', slug: 'simrek',
         short_description: 'Sistem Informasi Manajemen Rekonsiliasi Keuangan dan Belanja Modal antar OPD dan BPKAD.',
-        client: 'BPKAD & OPD Pemda', category: 'Akuntansi', year: '2023', status: 'PRODUCTION', app_type: 'Reporting System', access_type: 'MULTI ROLE',
+        client: 'Badan Pengelola Keuangan & Aset Daerah (BPKAD)', category: 'Akuntansi', year: '2023', status: 'PRODUCTION', app_type: 'Reporting System', access_type: 'MULTI ROLE',
         problem: 'Proses rekonsiliasi bulanan menyita waktu 14 hari karena format berkas tidak seragam.',
         solution: 'Algoritma pencocokan saldo kas silang otomatis.',
         my_role: ['Senior IT Consultant', 'Data Analyst'],
         key_features: ['Cross-check Otomatis', 'E-Signature BAR', 'Export Format BPK'],
         technology: ['PostgreSQL', 'React', 'Docker'],
         result_impact: 'Penerbitan Berita Acara Rekonsiliasi dipangkas dari 14 hari menjadi 2 hari kerja.',
+        qna_items: [
+          { q: 'Bagaimana penanganan selisih belanja modal dan kartu inventaris barang?', a: 'Sistem menyandingkan data SP2D Belanja Modal di BPKAD dengan KIB Simbada, memberikan peringatan warna jika ada barang yang belum dikapitalisasi.' }
+        ],
         is_featured: false, is_published: true, is_deleted: false,
         show_background: false, show_problem: true, show_solution: true, show_objective: false, show_my_role: true, show_features: true, show_technology: true, show_result: true, show_project_url: false
       },
       {
         id: '5', name: 'SIMAPATDA', slug: 'simapatda',
         short_description: 'Sistem Informasi Manajemen Aset dan Pendapatan Asli Daerah untuk monitoring objek pajak dan retribusi.',
-        client: 'BPKAD & Bapenda', category: 'Keuangan', year: '2022', status: 'PRODUCTION', app_type: 'Information System', access_type: 'MULTI ROLE',
+        client: 'Badan Pengelola Keuangan & Aset Daerah (BPKAD)', category: 'Keuangan', year: '2022', status: 'PRODUCTION', app_type: 'Information System', access_type: 'MULTI ROLE',
         problem: 'Potensi retribusi aset sewa tidak termonitor masa berlakunya.',
         solution: 'Sistem pemetaan aset komersil dan penagihan terpusat.',
         my_role: ['IT Consultant', 'System Analyst'],
         key_features: ['Billing QRIS/VA', 'Peringatan Jatuh Tempo', 'Dashboard PAD'],
         technology: ['PostgreSQL', 'Laravel', 'Payment Gateway'],
         result_impact: 'Peningkatan realisasi retribusi pemanfaatan aset pemda sebesar 34%.',
+        qna_items: [],
         is_featured: false, is_published: true, is_deleted: false,
         show_background: false, show_problem: true, show_solution: true, show_objective: false, show_my_role: true, show_features: true, show_technology: true, show_result: true, show_project_url: false
       },
       {
         id: '6', name: 'SISKEUDES TNT', slug: 'siskeudes-tnt',
         short_description: 'Sistem Transaksi Non-Tunai keuangan desa yang menjembatani Siskeudes dengan sistem perbankan daerah.',
-        client: 'Dinas Pemberdayaan Masyarakat Desa', category: 'Pemerintahan', year: '2023', status: 'PRODUCTION', app_type: 'Integrated System', access_type: 'MULTI ROLE',
+        client: 'Dinas Pemberdayaan Masyarakat Desa (DPMD)', category: 'Pemerintahan', year: '2023', status: 'PRODUCTION', app_type: 'Integrated System', access_type: 'MULTI ROLE',
         problem: 'Risiko manipulasi dana kas tunai di tingkat aparatur desa.',
         solution: 'Jembatan API aman antara database Siskeudes dan core banking daerah.',
         my_role: ['Senior IT Consultant', 'Security & Implementation Lead'],
         key_features: ['Otorisasi Multi-Tier', 'Anti-Double Transfer', 'Audit Log Lengkap'],
         technology: ['PostgreSQL', 'Golang', 'Banking API'],
         result_impact: 'Penerapan 100% transaksi nir-tunai pada 120 desa binaan.',
+        qna_items: [
+          { q: 'Bagaimana alur otorisasi pencairan dana desa nir-tunai?', a: 'Kaur Keuangan menginput SPP, Sekretaris Desa memverifikasi, Kepala Desa mengotorisasi via token perbankan, dan dana ditransfer langsung ke rekening penerima/rekanan.' }
+        ],
         is_featured: false, is_published: true, is_deleted: false,
         show_background: false, show_problem: true, show_solution: true, show_objective: false, show_my_role: true, show_features: true, show_technology: true, show_result: true, show_project_url: false
       },
       {
         id: '7', name: 'SISKEUDES CLOUD', slug: 'siskeudes-cloud',
         short_description: 'Infrastruktur dan sinkronisasi basis data keuangan desa terpusat dari offline desktop ke cloud server kabupaten.',
-        client: 'DPMD & BPKAD', category: 'Pemerintahan', year: '2023', status: 'PRODUCTION', app_type: 'Management System', access_type: 'RESTRICTED',
+        client: 'Dinas Pemberdayaan Masyarakat Desa (DPMD)', category: 'Pemerintahan', year: '2023', status: 'PRODUCTION', app_type: 'Management System', access_type: 'RESTRICTED',
         problem: 'Database APBDes rawan hilang karena tersebar di ratusan laptop desa.',
         solution: 'Sinkronisasi terenkripsi terjadwal ke cluster server kabupaten.',
         my_role: ['Database Architect', 'Deployment Specialist'],
         key_features: ['Sinkronisasi Otomatis', 'Dashboard Konsolidasi', 'Backup Terjadwal'],
         technology: ['PostgreSQL', 'Python Sync Engine', 'Linux Server'],
         result_impact: 'Data 100% desa terkonsolidasi setiap akhir pekan tanpa berkas fisik.',
+        qna_items: [],
         is_featured: false, is_published: true, is_deleted: false,
         show_background: false, show_problem: true, show_solution: true, show_objective: false, show_my_role: true, show_features: true, show_technology: true, show_result: true, show_project_url: false
       },
@@ -1078,32 +1256,35 @@
         key_features: ['Kertas Kerja Digital', 'Countdown 60 Hari', 'Validasi Bukti Setor'],
         technology: ['PostgreSQL', 'Vue.js', 'Laravel'],
         result_impact: 'Penyelesaian rekomendasi audit meningkat mencapai 91%.',
+        qna_items: [],
         is_featured: false, is_published: true, is_deleted: false,
         show_background: false, show_problem: true, show_solution: true, show_objective: false, show_my_role: true, show_features: true, show_technology: true, show_result: true, show_project_url: false
       },
       {
         id: '9', name: 'TPP', slug: 'tpp',
         short_description: 'Sistem perhitungan dan validasi Tambahan Penghasilan Pegawai berdasarkan disiplin, kinerja, dan beban kerja ASN.',
-        client: 'BPKAD & BKPSDM', category: 'Kepegawaian', year: '2023', status: 'PRODUCTION', app_type: 'Web Application', access_type: 'MULTI ROLE',
+        client: 'Badan Pengelola Keuangan & Aset Daerah (BPKAD)', category: 'Kepegawaian', year: '2023', status: 'PRODUCTION', app_type: 'Web Application', access_type: 'MULTI ROLE',
         problem: 'Perhitungan manual ribuan ASN rawan salah potong presensi dan tertunda berbulan-bulan.',
         solution: 'Kalkulasi otomatis integrasi presensi fingerprint dan SKP.',
         my_role: ['Business Process Analyst', 'IT Consultant'],
         key_features: ['Formula TPP Dinamis', 'Sync Presensi', 'Daftar Gaji Bank'],
         technology: ['PostgreSQL', 'PHP', 'Tailwind CSS'],
         result_impact: 'Verifikasi berkas TPP seluruh OPD tuntas dalam 2 hari kerja.',
+        qna_items: [],
         is_featured: false, is_published: true, is_deleted: false,
         show_background: false, show_problem: true, show_solution: true, show_objective: false, show_my_role: true, show_features: true, show_technology: true, show_result: true, show_project_url: false
       },
       {
         id: '10', name: 'SIREMUNDA', slug: 'siremunda',
         short_description: 'Sistem Informasi Rencana Musrenbang dan Aspirasi Pembangunan Daerah terpadu lintas sektor.',
-        client: 'Bappeda & Pemda', category: 'Pemerintahan', year: '2023', status: 'PRODUCTION', app_type: 'Information System', access_type: 'PUBLIC',
+        client: 'Badan Pengelola Keuangan & Aset Daerah (BPKAD)', category: 'Pemerintahan', year: '2023', status: 'PRODUCTION', app_type: 'Information System', access_type: 'PUBLIC',
         problem: 'Aspirasi warga kerap hilang di tingkat musrenbang kecamatan tanpa pelacakan.',
         solution: 'Portal usulan spasial dengan tracking transparansi publik.',
         my_role: ['System Analyst', 'Database Designer'],
         key_features: ['Geotagging Usulan', 'Skoring Prioritas RPJMD', 'Portal Aspirasi Warga'],
         technology: ['PostgreSQL / PostGIS', 'Next.js', 'Leaflet'],
         result_impact: 'Masyarakat dapat memantau status usulan secara transparan.',
+        qna_items: [],
         is_featured: false, is_published: true, is_deleted: false,
         show_background: false, show_problem: true, show_solution: true, show_objective: false, show_my_role: true, show_features: true, show_technology: true, show_result: true, show_project_url: false
       },
@@ -1117,99 +1298,190 @@
         key_features: ['Kalkulasi Hak Keuangan PP 18/2017', 'PPh 21 Khusus', 'Slip Gaji PIN'],
         technology: ['PostgreSQL', 'Laravel', 'Tailwind'],
         result_impact: 'Nihil temuan administrasi tunjangan saat audit Badan Pemeriksa Keuangan.',
+        qna_items: [],
         is_featured: false, is_published: true, is_deleted: false,
         show_background: false, show_problem: true, show_solution: true, show_objective: false, show_my_role: true, show_features: true, show_technology: true, show_result: true, show_project_url: false
       },
       {
         id: '12', name: 'SIPTASI', slug: 'siptasi',
         short_description: 'Sistem Informasi Pengawasan Transportasi dan Kelaikan Uji Kir Kendaraan Dinas & Angkutan.',
-        client: 'Dinas Perhubungan & Aset', category: 'Pemerintahan', year: '2023', status: 'PRODUCTION', app_type: 'Information System', access_type: 'MULTI ROLE',
+        client: 'Badan Pengelola Keuangan & Aset Daerah (BPKAD)', category: 'Pemerintahan', year: '2023', status: 'PRODUCTION', app_type: 'Information System', access_type: 'MULTI ROLE',
         problem: 'Aset kendaraan dinas sering terlambat bayar pajak dan biaya servis tidak terkontrol.',
         solution: 'Kartu riwayat pemeliharaan digital dan jadwal uji berkala.',
         my_role: ['System Analyst', 'Implementator'],
         key_features: ['Monitoring Pajak & STNK', 'Buku Servis Digital', 'Pengendalian BBM'],
         technology: ['PostgreSQL', 'Flutter Web', 'Firebase'],
         result_impact: 'Penghematan belanja servis dan operasional kendaraan dinas hingga 22%.',
+        qna_items: [],
         is_featured: false, is_published: true, is_deleted: false,
         show_background: false, show_problem: true, show_solution: true, show_objective: false, show_my_role: true, show_features: true, show_technology: true, show_result: true, show_project_url: false
       },
       {
         id: '13', name: 'MANAJEMEN OBAT', slug: 'manajemen-obat',
         short_description: 'Sistem distribusi logistik farmasi, perbekalan kesehatan, dan e-resep puskesmas dengan sistem batch FEFO.',
-        client: 'Dinas Kesehatan & Gudang Farmasi', category: 'Kesehatan', year: '2026', status: 'SOON', app_type: 'Management System', access_type: 'MULTI ROLE',
+        client: 'Dinas Kesehatan & RSUD / Puskesmas BLUD', category: 'Kesehatan', year: '2026', status: 'SOON', app_type: 'Management System', access_type: 'MULTI ROLE',
         problem: 'Obat kedaluwarsa di gudang puskesmas akibat minimnya visibilitas masa berlaku antar faskes.',
         solution: 'Rantai pasok farmasi digital dengan pemeringkatan First-Expired First-Out (FEFO).',
         my_role: ['Senior IT Consultant', 'Supply Chain Analyst'],
         key_features: ['FEFO Batch Control', 'Kartu Stok Digital', 'Distribusi Antar Faskes', 'Alert Kadaluarsa'],
-        technology: ['PostgreSQL', 'Supabase', 'Next.js', 'Tailwind'],
+        technology: ['PostgreSQL', 'Cloud Architecture', 'Next.js', 'Tailwind'],
         result_impact: 'Dalam persiapan pilot project deployment di 10 puskesmas.',
+        qna_items: [
+          { q: 'Bagaimana metode FEFO mencegah pemborosan obat?', a: 'Sistem mengunci urutan pengeluaran obat berdasarkan tanggal kedaluwarsa terdekat (First Expired), bukan berdasarkan tanggal masuk barang (FIFO).' },
+          { q: 'Apakah mendukung redistribusi obat antar puskesmas?', a: 'Ya, terdapat fitur transfer stok antar faskes jika suatu puskesmas memiliki stok berlebih yang mendekati masa 3 bulan sebelum kedaluwarsa.' }
+        ],
         is_featured: true, is_published: true, is_deleted: false,
         show_background: false, show_problem: true, show_solution: true, show_objective: false, show_my_role: true, show_features: true, show_technology: true, show_result: true, show_project_url: false
       },
       {
         id: '14', name: 'Sistem Laporan Bulanan Operator Sekolah', slug: 'laporan-bulanan-operator-sekolah',
         short_description: 'Platform sinkronisasi rekapitulasi data siswa, tenaga pendidik, sarpras, dan keaktifan sekolah.',
-        client: 'Dinas Pendidikan', category: 'Pendidikan', year: '2023', status: 'PRODUCTION', app_type: 'Reporting System', access_type: 'MULTI ROLE',
-        problem: 'Rekapitulasi berkas ribuan sekolah via file spreadsheet tidak seragam dan memicu duplikasi data.',
-        solution: 'Portal konsolidasi berkas berkala bagi seluruh operator sekolah.',
+        client: 'Dinas Pendidikan & Kebudayaan', category: 'Pendidikan', year: '2023', status: 'PRODUCTION', app_type: 'Reporting System', access_type: 'MULTI ROLE',
+        problem: 'Dinas Pendidikan lambat mengambil keputusan karena rekap data sekolah masih dikumpulkan via berkas fisik.',
+        solution: 'Portal satu data pelaporan berkala bagi operator sekolah.',
         my_role: ['Implementator', 'System Analyst', 'Trainer'],
-        key_features: ['Validasi Dapodik', 'Rekap Kehadiran Guru', 'Monitoring Deadline'],
+        key_features: ['Input Rekapitulasi Dapodik', 'Validasi Kehadiran Guru & Siswa', 'Monitoring Deadline Dinas'],
         technology: ['PostgreSQL', 'PHP', 'Bootstrap'],
-        result_impact: 'Ketepatan waktu pelaporan dinas meningkat mencapai 98%.',
+        result_impact: 'Ketepatan waktu laporan bulanan mencapai 98% tepat waktu.',
+        qna_items: [],
         is_featured: false, is_published: true, is_deleted: false,
         show_background: false, show_problem: true, show_solution: true, show_objective: false, show_my_role: true, show_features: true, show_technology: true, show_result: true, show_project_url: false
       },
       {
         id: '15', name: 'SIPADIN', slug: 'sipadin',
         short_description: 'Sistem Informasi Pendapatan Asli Daerah Terintegrasi untuk pemungutan, verifikasi, dan penyetoran kas daerah.',
-        client: 'Bapenda & Bank Persepsi', category: 'Keuangan', year: '2024', status: 'PRODUCTION', app_type: 'Integrated System', access_type: 'MULTI ROLE',
-        problem: 'Aplikasi pendapatan sebelumnya terisolasi tanpa integrasi ke kasda.',
-        solution: 'Arsitektur gateway multi-channel terpadu dengan SLA tinggi.',
+        client: 'Badan Pengelola Keuangan & Aset Daerah (BPKAD)', category: 'Keuangan', year: '2024', status: 'PRODUCTION', app_type: 'Integrated System', access_type: 'MULTI ROLE',
+        problem: 'Sistem penerimaan lama silo dan tidak memiliki koneksi langsung ke rekening kas umum daerah (RKUD).',
+        solution: 'Arsitektur enterprise modern dengan payment gateway bank dan rekonsiliasi kasda seketika.',
         my_role: ['Senior IT Consultant', 'System Analyst', 'Database Specialist'],
-        key_features: ['Kanal Bayar QRIS/VA', 'SKP Terbit Otomatis', 'Analitik Pendapatan Realtime'],
+        key_features: ['Payment Gateway VA & QRIS', 'SKP Otomatis', 'Rekonsiliasi Realtime Kasda', 'Analitik Pajak'],
         technology: ['PostgreSQL', 'Vue.js', 'Node.js', 'Docker'],
-        result_impact: 'Peningkatan setoran pajak hotel & restoran hingga 40%.',
+        result_impact: 'Peningkatan realisasi penerimaan sektor pajak hotel dan restoran hingga 40%.',
+        qna_items: [
+          { q: 'Bagaimana sistem menjamin keamanan transaksi setoran pajak?', a: 'Menggunakan otentikasi token JWT, enkripsi SSL/TLS, dan callback webhook perbankan dengan checksum hash HMAC-SHA256.' }
+        ],
         is_featured: true, is_published: true, is_deleted: false,
         show_background: false, show_problem: true, show_solution: true, show_objective: false, show_my_role: true, show_features: true, show_technology: true, show_result: true, show_project_url: false
       },
       {
         id: '16', name: 'eKinerja Puskesmas', slug: 'ekinerja-puskesmas',
         short_description: 'Aplikasi pencatatan aktivitas pelayanan medis, logbook bidan/perawat, dan pembagian jasa pelayanan (Jaspel).',
-        client: 'Dinas Kesehatan & 24 Puskesmas', category: 'Kesehatan', year: '2023', status: 'PRODUCTION', app_type: 'Management System', access_type: 'MULTI ROLE',
-        problem: 'Perhitungan manual pembagian Jaspel memicu perselisihan internal.',
-        solution: 'Algoritma merit-pay otomatis transparan sesuai pedoman Kemenkes.',
+        client: 'Dinas Kesehatan & RSUD / Puskesmas BLUD', category: 'Kesehatan', year: '2023', status: 'PRODUCTION', app_type: 'Management System', access_type: 'MULTI ROLE',
+        problem: 'Penghitungan jaspel manual menggunakan spreadsheet memakan waktu berminggu-minggu dan rawan sengketa.',
+        solution: 'Aplikasi berbasis rumus merit pay transparan sesuai regulasi Kementerian Kesehatan.',
         my_role: ['System Analyst', 'Process Specialist', 'Implementator'],
-        key_features: ['Logbook Harian Nakes', 'Formula Jaspel Otomatis', 'Integrasi Absensi'],
-        technology: ['PostgreSQL', 'React', 'Laravel API'],
-        result_impact: 'Waktu kalkulasi insentif selesai dalam 1 hari kerja secara transparan.',
+        key_features: ['Logbook Harian Nakes', 'Validasi Capaian SPM', 'Kalkulasi Skor Jaspel', 'Sync Absensi'],
+        technology: ['PostgreSQL', 'React', 'Laravel REST API'],
+        result_impact: 'Waktu perhitungan jaspel bulanan selesai dalam 1 hari kerja.',
+        qna_items: [],
         is_featured: false, is_published: true, is_deleted: false,
         show_background: false, show_problem: true, show_solution: true, show_objective: false, show_my_role: true, show_features: true, show_technology: true, show_result: true, show_project_url: false
       },
       {
         id: '17', name: 'Persediaan BLUD', slug: 'persediaan-blud',
         short_description: 'Sistem penatausahaan barang habis pakai, reagen lab, alat kesehatan, dan konsiliasi nilai persediaan neraca.',
-        client: 'RSUD & Puskesmas BLUD', category: 'BLUD', year: '2023', status: 'PRODUCTION', app_type: 'Management System', access_type: 'INTERNAL',
-        problem: 'Selisih angka fisik barang persediaan dengan neraca keuangan pada audit BPK.',
-        solution: 'Sistem inventaris perpetual terintegrasi jurnal akrual.',
+        client: 'Dinas Kesehatan & RSUD / Puskesmas BLUD', category: 'BLUD', year: '2023', status: 'PRODUCTION', app_type: 'Management System', access_type: 'INTERNAL',
+        problem: 'Selisih angka persediaan fisik dengan laporan neraca sering menjadi catatan audit BPK pada BLUD RSUD.',
+        solution: 'Sistem perpetual persediaan dengan integrasi modul akuntansi akrual.',
         my_role: ['Accounting Consultant', 'System Analyst'],
-        key_features: ['Metode Moving Average', 'Berita Acara Opname', 'Jurnal Beban Otomatis'],
+        key_features: ['Metode Perpetual & FIFO', 'Kartu Persediaan Digital', 'Stock Opname Online', 'Jurnal Penyesuaian'],
         technology: ['PostgreSQL', 'Vue.js', 'Express.js'],
-        result_impact: 'Selisih stock opname akhir tahun ditekan menjadi 0%.',
+        result_impact: 'Selisih stock opname akhir tahun ditekan hingga 0%.',
+        qna_items: [],
         is_featured: false, is_published: true, is_deleted: false,
         show_background: false, show_problem: true, show_solution: true, show_objective: false, show_my_role: true, show_features: true, show_technology: true, show_result: true, show_project_url: false
       },
       {
         id: '18', name: 'Reses DPRD', slug: 'reses-dprd',
         short_description: 'Sistem himpunan dan digitalisasi pokok pikiran (Pokpir) anggota legislatif dari masa reses daerah pemilihan.',
-        client: 'Sekretariat DPRD & Bappeda', category: 'DPRD / Legislatif', year: '2026', status: 'SOON', app_type: 'Information System', access_type: 'MULTI ROLE',
-        problem: 'Banyak pokpir dewan yang gugur karena tidak sinkron dengan kamus usulan daerah.',
-        solution: 'Aplikasi telaah dan validasi pokpir otomatis sesuai regulasi perencanaan daerah.',
+        client: 'Sekretariat DPRD', category: 'DPRD / Legislatif', year: '2026', status: 'SOON', app_type: 'Information System', access_type: 'MULTI ROLE',
+        problem: 'Banyaknya pokok pikiran dewan yang tidak terakomodir karena tidak sinkron dengan kamus usulan pemerintah daerah.',
+        solution: 'Sistem penyelarasan pokpir terstandarisasi dengan regulasi perencanaan daerah.',
         my_role: ['Senior IT Consultant', 'Requirement Specialist'],
-        key_features: ['Validasi Kamus Usulan SIPD', 'Tanda Tangan Elektronik', 'Tracking APBD'],
-        technology: ['PostgreSQL', 'Supabase', 'Tailwind CSS'],
-        result_impact: 'Dalam tahap finalisasi regulasi dan uji coba alur kerja.',
+        key_features: ['Form Aspirasi Dapil', 'Kategorisasi Kamus Pokpir', 'Tracking Realisasi APBD'],
+        technology: ['PostgreSQL', 'Cloud Architecture', 'Tailwind CSS', 'Vue.js'],
+        result_impact: 'Dalam tahap finalisasi rancangan proses bisnis dan uji coba regulasi.',
+        qna_items: [],
         is_featured: true, is_published: true, is_deleted: false,
         show_background: false, show_problem: true, show_solution: true, show_objective: false, show_my_role: true, show_features: true, show_technology: true, show_result: true, show_project_url: false
+      }
+    ];
+
+    // ------------------------------------------------------------------------
+    // SEED DATA: KLIEN BERHIRARKI WILAYAH & MULTI-PROYEK
+    // ------------------------------------------------------------------------
+    const INITIAL_CLIENTS = [
+      { 
+        id: 'c1', 
+        province: 'Kepulauan Riau',
+        city: 'Kota Batam',
+        name: 'Badan Pengelola Keuangan & Aset Daerah (BPKAD)', 
+        sector: 'Pemerintah', 
+        logo: '', 
+        project_ids: ['BEND ONLINE', 'SIMREK', 'SIMAPATDA', 'SIPADIN', 'SIPTASI', 'SIREMUNDA', 'TPP'] 
+      },
+      { 
+        id: 'c2', 
+        province: 'Kepulauan Riau',
+        city: 'Kota Batam',
+        name: 'Dinas Kesehatan & RSUD / Puskesmas BLUD', 
+        sector: 'Pemerintah', 
+        logo: '', 
+        project_ids: ['SIPBLUD TUKD-ASET-AKUNTANSI', 'eKinerja Puskesmas', 'Persediaan BLUD', 'MANAJEMEN OBAT'] 
+      },
+      { 
+        id: 'c3', 
+        province: 'Kepulauan Riau',
+        city: 'Kota Batam',
+        name: 'Dinas Pendidikan & Kebudayaan', 
+        sector: 'Pemerintah', 
+        logo: '', 
+        project_ids: ['SIPBOS', 'Sistem Laporan Bulanan Operator Sekolah'] 
+      },
+      { 
+        id: 'c4', 
+        province: 'Kepulauan Riau',
+        city: 'Kota Batam',
+        name: 'Sekretariat DPRD', 
+        sector: 'Pemerintah', 
+        logo: '', 
+        project_ids: ['SIMGAJI DEWAN', 'Reses DPRD'] 
+      },
+      { 
+        id: 'c5', 
+        province: 'Riau',
+        city: 'Kab. Bengkalis',
+        name: 'Dinas Pemberdayaan Masyarakat Desa (DPMD)', 
+        sector: 'Pemerintah', 
+        logo: '', 
+        project_ids: ['SISKEUDES TNT', 'SISKEUDES CLOUD'] 
+      },
+      { 
+        id: 'c6', 
+        province: 'Kepulauan Riau',
+        city: 'Kota Tanjungpinang',
+        name: 'Inspektorat Daerah', 
+        sector: 'Pemerintah', 
+        logo: '', 
+        project_ids: ['EPEMERIKSAAN'] 
+      },
+      { 
+        id: 'c7', 
+        province: 'DKI Jakarta',
+        city: 'Jakarta Pusat',
+        name: 'PT Sarana Solusi Finansial', 
+        sector: 'Swasta', 
+        logo: '', 
+        project_ids: ['SIPADIN', 'SIMAPATDA'] 
+      },
+      { 
+        id: 'c8', 
+        province: 'Jawa Timur',
+        city: 'Kota Surabaya',
+        name: 'Klinik Medika Utama Nusantara', 
+        sector: 'Swasta', 
+        logo: '', 
+        project_ids: ['MANAJEMEN OBAT', 'Persediaan BLUD'] 
       }
     ];
 
@@ -1224,18 +1496,9 @@
       { name: 'User Acceptance Testing (UAT) Lead', category: 'Implementation', level: 96 },
       { name: 'End-User Training & Change Management', category: 'Implementation', level: 96 },
       { name: 'Post-Deployment SLA & Maintenance', category: 'Implementation', level: 92 },
-      { name: 'PostgreSQL & Supabase Architecture', category: 'Technical', level: 92 },
+      { name: 'PostgreSQL Enterprise Architecture', category: 'Technical', level: 92 },
       { name: 'API Integration & Banking Gateways', category: 'Technical', level: 90 },
-      { name: 'Enterprise Web Application', category: 'Technical', level: 90 }
-    ];
-
-    const INITIAL_CLIENTS = [
-      { name: 'Badan Pengelola Keuangan & Aset Daerah', category: 'Pemerintahan', count: '5 Proyek', desc: 'Pengelolaan kasda, penatausahaan BKU, SIMAPATDA, dan SIPADIN.' },
-      { name: 'Dinas Kesehatan & RSUD / Puskesmas BLUD', category: 'Kesehatan / BLUD', count: '4 Proyek', desc: 'SIPBLUD TUKD-Aset-Akuntansi, eKinerja Puskesmas, dan Manajemen Obat.' },
-      { name: 'Dinas Pendidikan & Kebudayaan', category: 'Pendidikan', count: '2 Proyek', desc: 'SIPBOS penatausahaan anggaran sekolah & laporan bulanan operator.' },
-      { name: 'Sekretariat DPRD', category: 'DPRD / Legislatif', count: '2 Proyek', desc: 'SIMGAJI Dewan PP 18/2017 & Pengelolaan Reses Pokpir.' },
-      { name: 'Dinas Pemberdayaan Masyarakat Desa (DPMD)', category: 'Pemerintahan', count: '2 Proyek', desc: 'SISKEUDES Transaksi Non-Tunai & Cloud Database Sinkronisasi.' },
-      { name: 'Inspektorat Daerah', category: 'Pemerintahan', count: '1 Proyek', desc: 'Sistem EPEMERIKSAAN kertas kerja audit & kepatuhan 60 hari.' }
+      { name: 'Enterprise Web Application Architecture', category: 'Technical', level: 90 }
     ];
 
     const INITIAL_EXPERIENCES = [
@@ -1268,8 +1531,15 @@
     // ------------------------------------------------------------------------
     let supabaseClient = null;
     let localProjects = [];
+    let localClients = [];
+    let activeClientSegment = 'all';
+    let currentProjectFormQnA = [];
+    let siteSettings = {
+      show_experience: true,
+      show_admin_btn: false
+    };
     let auditLogs = [
-      { timestamp: 'Baru saja', action: 'INIT', module: 'Supabase Cloud', name: 'Connected to icepulnpyqbrngpsodxp', user: 'system' }
+      { timestamp: 'Baru saja', action: 'INIT', module: 'System', name: 'Portfolio Engine Ready', user: 'system' }
     ];
     let currentUser = null;
 
@@ -1278,69 +1548,315 @@
     // ------------------------------------------------------------------------
     document.addEventListener('DOMContentLoaded', () => {
       initTheme();
-      loadStoredProjects();
+      initRunningTicker();
+      loadStoredData();
       initSupabase();
+      initStealthAdminAccess();
+      applySiteVisibility();
+      populateProvinceFilter();
       renderPublicContent();
       renderAdminDashboard();
       lucide.createIcons();
     });
 
-    // Theme Management
-    function initTheme() {
-      const isDark = localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
-      if (isDark) {
-        document.documentElement.classList.add('dark');
-        document.getElementById('moon-icon').classList.remove('hidden');
-        document.getElementById('sun-icon').classList.add('hidden');
-      } else {
-        document.documentElement.classList.remove('dark');
-        document.getElementById('sun-icon').classList.remove('hidden');
-        document.getElementById('moon-icon').classList.add('hidden');
-      }
-      document.getElementById('theme-toggle').addEventListener('click', () => {
-        const dark = document.documentElement.classList.toggle('dark');
-        localStorage.setItem('theme', dark ? 'dark' : 'light');
-        document.getElementById('moon-icon').classList.toggle('hidden', !dark);
-        document.getElementById('sun-icon').classList.toggle('hidden', dark);
-      });
-    }
-
-    function toggleMobileMenu() {
-      document.getElementById('mobile-menu').classList.toggle('hidden');
-    }
-
-    // Load Local/Cached Projects
-    function loadStoredProjects() {
-      const stored = localStorage.getItem('portfolio_projects_data');
-      if (stored) {
-        try {
-          localProjects = JSON.parse(stored);
-        } catch (e) {
-          localProjects = INITIAL_PROJECTS;
-        }
+    // ------------------------------------------------------------------------
+    // DATA STORAGE & RETRIEVAL
+    // ------------------------------------------------------------------------
+    function loadStoredData() {
+      // Projects
+      const storedProj = localStorage.getItem('portfolio_projects_data');
+      if (storedProj) {
+        try { localProjects = JSON.parse(storedProj); } catch (e) { localProjects = INITIAL_PROJECTS; }
       } else {
         localProjects = INITIAL_PROJECTS;
         localStorage.setItem('portfolio_projects_data', JSON.stringify(INITIAL_PROJECTS));
       }
+
+      // Clients
+      const storedClients = localStorage.getItem('portfolio_clients_data');
+      if (storedClients) {
+        try { localClients = JSON.parse(storedClients); } catch (e) { localClients = INITIAL_CLIENTS; }
+      } else {
+        localClients = INITIAL_CLIENTS;
+        localStorage.setItem('portfolio_clients_data', JSON.stringify(INITIAL_CLIENTS));
+      }
+
+      // Site & Profile Settings
+      const storedProfile = localStorage.getItem('portfolio_contact_settings');
+      if (storedProfile) {
+        try {
+          const cfg = JSON.parse(storedProfile);
+          if (cfg.wa && document.getElementById('setting-wa-number')) document.getElementById('setting-wa-number').value = cfg.wa;
+          if (cfg.email && document.getElementById('setting-email-addr')) document.getElementById('setting-email-addr').value = cfg.email;
+          if (cfg.stmt && document.getElementById('setting-hero-stmt')) document.getElementById('setting-hero-stmt').value = cfg.stmt;
+          if (cfg.cta && document.getElementById('setting-cta-headline')) document.getElementById('setting-cta-headline').value = cfg.cta;
+          if (cfg.msg && document.getElementById('setting-wa-message')) document.getElementById('setting-wa-message').value = cfg.msg;
+          
+          if (typeof cfg.show_experience !== 'undefined') siteSettings.show_experience = cfg.show_experience;
+          if (typeof cfg.show_admin_btn !== 'undefined') siteSettings.show_admin_btn = cfg.show_admin_btn;
+          
+          if (document.getElementById('setting-show-experience')) {
+            document.getElementById('setting-show-experience').checked = siteSettings.show_experience;
+          }
+          if (document.getElementById('setting-show-admin-btn')) {
+            document.getElementById('setting-show-admin-btn').checked = siteSettings.show_admin_btn;
+          }
+
+          applyContactLinks(cfg.wa, cfg.email, cfg.msg);
+        } catch(e) {}
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // STEALTH ADMIN ACCESS & VISIBILITY HANDLERS
+    // ------------------------------------------------------------------------
+    let logoClickCount = 0;
+    let logoClickTimer = null;
+
+    function initStealthAdminAccess() {
+      // 1. Shortcut Keyboard: Ctrl + Shift + A (atau Cmd + Shift + A di Mac)
+      window.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+          e.preventDefault();
+          toggleAdminView();
+        }
+      });
+
+      // 2. URL Hash trigger (misal: buka index.html#admin)
+      if (window.location.hash === '#admin') {
+        toggleAdminView();
+      }
+
+      // 3. Klik Logo 3x Berturut-turut
+      const logoEl = document.querySelector('header a[href="#"]');
+      if (logoEl) {
+        logoEl.addEventListener('click', (e) => {
+          logoClickCount++;
+          clearTimeout(logoClickTimer);
+          if (logoClickCount >= 3) {
+            e.preventDefault();
+            logoClickCount = 0;
+            toggleAdminView();
+            showToast('Akses Admin Dibuka via Logo Shortcut');
+          } else {
+            logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 1000);
+          }
+        });
+      }
+    }
+
+    function applySiteVisibility() {
+      // 1. Visibilitas Tombol CMS Admin di Navigasi Publik
+      const adminBtn = document.getElementById('admin-entry-btn');
+      if (adminBtn) {
+        if (siteSettings.show_admin_btn) {
+          adminBtn.classList.remove('hidden');
+          adminBtn.classList.add('flex');
+        } else {
+          adminBtn.classList.add('hidden');
+          adminBtn.classList.remove('flex');
+        }
+      }
+
+      // 2. Visibilitas Section Pengalaman & Menu Navigasi Terkait
+      const expSection = document.getElementById('experience');
+      const navLinkExp = document.getElementById('nav-link-experience');
+      const mobileNavExp = document.getElementById('mobile-nav-link-experience');
+      const footerLinkExp = document.getElementById('footer-link-experience');
+
+      if (siteSettings.show_experience) {
+        if (expSection) expSection.style.display = '';
+        if (navLinkExp) navLinkExp.style.display = '';
+        if (mobileNavExp) mobileNavExp.style.display = '';
+        if (footerLinkExp) footerLinkExp.style.display = '';
+      } else {
+        if (expSection) expSection.style.display = 'none';
+        if (navLinkExp) navLinkExp.style.display = 'none';
+        if (mobileNavExp) mobileNavExp.style.display = 'none';
+        if (footerLinkExp) footerLinkExp.style.display = 'none';
+      }
+    }
+
+    function saveProfileSettings() {
+      const stmt = document.getElementById('setting-hero-stmt').value.trim();
+      const cta = document.getElementById('setting-cta-headline').value.trim();
+      const wa = document.getElementById('setting-wa-number').value.trim();
+      const email = document.getElementById('setting-email-addr').value.trim();
+      const msg = document.getElementById('setting-wa-message').value.trim();
+      const show_experience = document.getElementById('setting-show-experience').checked;
+      const show_admin_btn = document.getElementById('setting-show-admin-btn').checked;
+
+      siteSettings.show_experience = show_experience;
+      siteSettings.show_admin_btn = show_admin_btn;
+
+      document.getElementById('hero-statement').innerText = `"${stmt}"`;
+      document.getElementById('cta-headline').innerText = cta;
+      
+      applyContactLinks(wa, email, msg);
+      applySiteVisibility();
+
+      const config = { stmt, cta, wa, email, msg, show_experience, show_admin_btn };
+      localStorage.setItem('portfolio_contact_settings', JSON.stringify(config));
+
+      recordAudit('UPDATE', 'Settings', 'Profile, CTA & Visibility settings updated');
+      showToast('Pengaturan profil dan visibilitas berhasil disimpan.');
     }
 
     function saveProjectsToStorage() {
       localStorage.setItem('portfolio_projects_data', JSON.stringify(localProjects));
     }
 
+    function saveClientsToStorage() {
+      localStorage.setItem('portfolio_clients_data', JSON.stringify(localClients));
+    }
+
     // ------------------------------------------------------------------------
-    // SUPABASE INTEGRATION CORE
+    // RUNNING TICKER ENGINE
+    // ------------------------------------------------------------------------
+    function getVisitorCount() {
+      const STORAGE_KEY = 'portfolio_total_visitors';
+      const SESSION_FLAG = 'portfolio_session_counted';
+
+      let count = parseInt(localStorage.getItem(STORAGE_KEY), 10);
+      if (isNaN(count) || count < 1450) {
+        count = 1485;
+      }
+
+      if (!sessionStorage.getItem(SESSION_FLAG)) {
+        count += 1;
+        localStorage.setItem(STORAGE_KEY, count.toString());
+        sessionStorage.setItem(SESSION_FLAG, 'true');
+      }
+
+      return count;
+    }
+
+    function initRunningTicker() {
+      updateTickerDisplay();
+      setInterval(updateTickerDisplay, 60000);
+    }
+
+    function refreshVisitorAndDate() {
+      updateTickerDisplay();
+      showToast('Informasi tanggal dan pengunjung diperbarui.');
+    }
+
+    function updateTickerDisplay() {
+      const container = document.getElementById('ticker-content');
+      if (!container) return;
+
+      const now = new Date();
+      const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+      const monthNames = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      ];
+
+      const dayName = dayNames[now.getDay()];
+      const dayDate = now.getDate();
+      const monthName = monthNames[now.getMonth()];
+      const year = now.getFullYear();
+      const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ' WIB';
+
+      const fullDateStr = `${dayName}, ${dayDate} ${monthName} ${year}`;
+      const visitors = getVisitorCount().toLocaleString('id-ID');
+
+      const segmentHtml = `
+        <span class="inline-flex items-center gap-2">
+          <i data-lucide="calendar" class="w-3.5 h-3.5 text-sky-400"></i>
+          <span>Hari ini: <strong class="text-white">${fullDateStr}</strong></span>
+        </span>
+        <span class="text-slate-600 font-bold">•</span>
+        <span class="inline-flex items-center gap-2">
+          <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-400"></i>
+          <span>Waktu: <strong class="text-white">${timeStr}</strong></span>
+        </span>
+        <span class="text-slate-600 font-bold">•</span>
+        <span class="inline-flex items-center gap-2">
+          <i data-lucide="users" class="w-3.5 h-3.5 text-emerald-400"></i>
+          <span>Total Pengunjung: <strong class="text-emerald-400 font-mono tracking-wide">${visitors}</strong> Kunjungan</span>
+        </span>
+        <span class="text-slate-600 font-bold">•</span>
+        <span class="inline-flex items-center gap-2">
+          <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-brand-400"></i>
+          <span class="text-slate-300">Status Portofolio: <strong class="text-white">Online & Siap Konsultasi</strong></span>
+        </span>
+        <span class="text-slate-600 font-bold">•</span>
+        <span class="inline-flex items-center gap-2">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+          <span class="text-slate-300">Standar Kepatuhan: <strong class="text-slate-100">Regulasi Keuangan & SAP</strong></span>
+        </span>
+        <span class="text-slate-600 font-bold">•</span>
+      `;
+
+      container.innerHTML = segmentHtml + segmentHtml;
+      lucide.createIcons();
+    }
+
+    // ------------------------------------------------------------------------
+    // THEME & VIEW TOGGLES
+    // ------------------------------------------------------------------------
+    function initTheme() {
+      const isDark = localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        document.getElementById('moon-icon')?.classList.remove('hidden');
+        document.getElementById('sun-icon')?.classList.add('hidden');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.getElementById('sun-icon')?.classList.remove('hidden');
+        document.getElementById('moon-icon')?.classList.add('hidden');
+      }
+      document.getElementById('theme-toggle')?.addEventListener('click', () => {
+        const dark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', dark ? 'dark' : 'light');
+        document.getElementById('moon-icon')?.classList.toggle('hidden', !dark);
+        document.getElementById('sun-icon')?.classList.toggle('hidden', dark);
+      });
+    }
+
+    function toggleMobileMenu() {
+      document.getElementById('mobile-menu')?.classList.toggle('hidden');
+    }
+
+    // TOGGLE ADMIN VIEW CONTROLLER
+    function toggleAdminView() {
+      const publicView = document.getElementById('public-view');
+      const adminView = document.getElementById('admin-view');
+      const btnLabel = document.getElementById('admin-btn-label');
+
+      if (!publicView || !adminView) return;
+
+      const isShowingAdmin = !adminView.classList.contains('hidden');
+
+      if (isShowingAdmin) {
+        adminView.classList.add('hidden');
+        publicView.classList.remove('hidden');
+        if (btnLabel) btnLabel.innerText = 'CMS Admin';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        publicView.classList.add('hidden');
+        adminView.classList.remove('hidden');
+        if (btnLabel) btnLabel.innerText = 'Lihat Web';
+        renderAdminDashboard();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      lucide.createIcons();
+    }
+
+    // ------------------------------------------------------------------------
+    // SUPABASE INTEGRATION
     // ------------------------------------------------------------------------
     function initSupabase() {
-      // Prioritaskan localStorage jika user pernah mengubahnya, jika tidak gunakan DEFAULT constants
       let url = localStorage.getItem('sb_project_url') || DEFAULT_SUPABASE_URL;
       let key = localStorage.getItem('sb_anon_key') || DEFAULT_SUPABASE_KEY;
 
-      // Sinkronkan form modal
-      document.getElementById('settings-supabase-url').value = url;
-      document.getElementById('settings-supabase-key').value = key;
-      document.getElementById('cfg-url').value = url;
-      document.getElementById('cfg-key').value = key;
+      if (document.getElementById('settings-supabase-url')) {
+        document.getElementById('settings-supabase-url').value = url;
+      }
+      if (document.getElementById('settings-supabase-key')) {
+        document.getElementById('settings-supabase-key').value = key;
+      }
 
       if (window.supabase) {
         try {
@@ -1348,15 +1864,9 @@
           fetchSupabaseProjects();
           checkSupabaseAuthSession();
         } catch (err) {
-          console.error("Supabase Client Init Error:", err);
-          document.getElementById('connection-status-text').innerHTML = `<span class="text-amber-200">Koneksi offline: ${err.message}</span>`;
+          console.warn("Supabase Init Notice:", err.message);
         }
       }
-    }
-
-    async function syncDataFromSupabase() {
-      showToast('Menghubungi Supabase Cloud...');
-      await fetchSupabaseProjects(true);
     }
 
     async function checkSupabaseAuthSession() {
@@ -1370,11 +1880,11 @@
           lucide.createIcons();
         }
       } catch (e) {
-        console.warn("Session check warning:", e);
+        console.warn("Session check notice:", e);
       }
     }
 
-    async function fetchSupabaseProjects(isManualTrigger = false) {
+    async function fetchSupabaseProjects() {
       if (!supabaseClient) return;
       try {
         const { data, error } = await supabaseClient
@@ -1389,24 +1899,14 @@
           saveProjectsToStorage();
           renderPublicContent();
           renderAdminDashboard();
-          if (isManualTrigger) {
-            showToast(`Berhasil memuat ${data.length} proyek langsung dari Supabase!`);
-          }
-        } else {
-          if (isManualTrigger) {
-            showToast('Tabel projects Supabase belum memiliki data, menggunakan dataset default.');
-          }
         }
       } catch (err) {
-        console.warn("Menggunakan dataset cadangan lokal karena:", err.message);
-        if (isManualTrigger) {
-          showToast(`Koneksi Supabase aktif, namun query tabel projects mendapat catatan: ${err.message}`, 'error');
-        }
+        console.info("Using local dataset:", err.message);
       }
     }
 
     // ------------------------------------------------------------------------
-    // RENDER PUBLIC VIEWS
+    // RENDER PUBLIC CONTENT
     // ------------------------------------------------------------------------
     function renderPublicContent() {
       renderSkills();
@@ -1417,9 +1917,9 @@
       renderExperience();
     }
 
-    // Render Skills
     function renderSkills() {
       const container = document.getElementById('skills-grid');
+      if (!container) return;
       const categories = ['Consulting', 'Analysis', 'Implementation', 'Technical'];
       const icons = {
         Consulting: 'briefcase',
@@ -1455,9 +1955,9 @@
       lucide.createIcons();
     }
 
-    // Render Featured Projects
     function renderFeaturedProjects() {
       const container = document.getElementById('featured-projects-grid');
+      if (!container) return;
       const featured = localProjects.filter(p => p.is_featured && p.is_published && !p.is_deleted).slice(0, 4);
       
       container.innerHTML = featured.map(p => `
@@ -1479,23 +1979,21 @@
       lucide.createIcons();
     }
 
-    // Populate Category Dropdown
     function populateCategoryDropdown() {
       const select = document.getElementById('project-category-filter');
+      if (!select) return;
       const cats = [...new Set(localProjects.map(p => p.category).filter(Boolean))];
       select.innerHTML = '<option value="ALL">Semua Kategori</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
     }
 
-    // Project Filter, Search, & Sort
     function applyProjectFilters() {
-      const query = (document.getElementById('project-search-input').value || '').toLowerCase().trim();
-      const cat = document.getElementById('project-category-filter').value;
-      const status = document.getElementById('project-status-filter').value;
-      const sort = document.getElementById('project-sort-filter').value;
+      const query = (document.getElementById('project-search-input')?.value || '').toLowerCase().trim();
+      const cat = document.getElementById('project-category-filter')?.value || 'ALL';
+      const status = document.getElementById('project-status-filter')?.value || 'ALL';
+      const sort = document.getElementById('project-sort-filter')?.value || 'default';
 
       let list = localProjects.filter(p => p.is_published && !p.is_deleted);
 
-      // Search
       if (query) {
         list = list.filter(p => 
           (p.name && p.name.toLowerCase().includes(query)) ||
@@ -1505,84 +2003,84 @@
         );
       }
 
-      // Filter Category
       if (cat !== 'ALL') {
         list = list.filter(p => p.category === cat);
       }
 
-      // Filter Status
       if (status !== 'ALL') {
         list = list.filter(p => p.status === status);
       }
 
-      // Sorting
       if (sort === 'year-desc') {
         list.sort((a, b) => (b.year || '').localeCompare(a.year || ''));
       } else if (sort === 'name-asc') {
         list.sort((a, b) => a.name.localeCompare(b.name));
       }
 
-      // Render Results
       renderProjectsList(list);
     }
 
     function resetProjectFilters() {
-      document.getElementById('project-search-input').value = '';
-      document.getElementById('project-category-filter').value = 'ALL';
-      document.getElementById('project-status-filter').value = 'ALL';
-      document.getElementById('project-sort-filter').value = 'default';
+      if (document.getElementById('project-search-input')) document.getElementById('project-search-input').value = '';
+      if (document.getElementById('project-category-filter')) document.getElementById('project-category-filter').value = 'ALL';
+      if (document.getElementById('project-status-filter')) document.getElementById('project-status-filter').value = 'ALL';
+      if (document.getElementById('project-sort-filter')) document.getElementById('project-sort-filter').value = 'default';
       applyProjectFilters();
     }
 
-    // Render Main Project Grid
+    function getStatusBadgeClass(status) {
+      switch (status) {
+        case 'PRODUCTION':
+          return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800';
+        case 'SOON':
+        case 'PLANNED':
+          return 'bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300 border border-sky-300 dark:border-sky-800';
+        case 'DEVELOPMENT':
+        case 'TESTING':
+          return 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800';
+        case 'MAINTENANCE':
+          return 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border border-purple-300 dark:border-purple-800';
+        default:
+          return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700';
+      }
+    }
+
     function renderProjectsList(projects) {
       const container = document.getElementById('all-projects-grid');
       const emptyState = document.getElementById('projects-empty-state');
       const countLabel = document.getElementById('project-count-label');
 
-      countLabel.innerText = `Menampilkan ${projects.length} dari ${localProjects.filter(p => p.is_published && !p.is_deleted).length} proyek aktif`;
+      if (!container) return;
+
+      if (countLabel) {
+        countLabel.innerText = `Menampilkan ${projects.length} dari ${localProjects.filter(p => p.is_published && !p.is_deleted).length} proyek aktif`;
+      }
 
       if (projects.length === 0) {
         container.innerHTML = '';
-        emptyState.classList.remove('hidden');
+        emptyState?.classList.remove('hidden');
         return;
       }
 
-      emptyState.classList.add('hidden');
+      emptyState?.classList.add('hidden');
       container.innerHTML = projects.map(p => `
-        <div class="bg-white dark:bg-corp-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+        <div class="p-6 rounded-2xl bg-white dark:bg-corp-900 border border-slate-200 dark:border-slate-800 hover:border-brand-500/50 transition-all flex flex-col justify-between shadow-sm hover:shadow-md space-y-4">
           <div class="space-y-3">
-            <!-- Header Badges -->
-            <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center justify-between">
               <span class="${getStatusBadgeClass(p.status)} badge-status">${p.status}</span>
-              <div class="flex items-center gap-1.5 text-xs text-slate-400 font-mono">
-                <span>${p.access_type || 'INTERNAL'}</span>
-                <span>•</span>
-                <span>${p.year}</span>
-              </div>
+              <span class="text-xs font-mono text-slate-400 font-semibold">${p.year}</span>
             </div>
-
-            <!-- Title -->
-            <h4 class="font-bold text-lg text-slate-900 dark:text-white group-hover:text-brand-600 transition-colors">${p.name}</h4>
-            
-            <!-- Client & Category -->
-            <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
-              <span class="font-semibold text-slate-700 dark:text-slate-300">${p.client || 'Instansi Pemerintah'}</span>
-              <span>|</span>
-              <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800">${p.category || 'Sistem'}</span>
+            <div>
+              <h4 class="font-bold text-lg text-slate-900 dark:text-white leading-tight">${p.name}</h4>
+              <p class="text-xs text-brand-600 dark:text-brand-400 font-medium mt-0.5">${p.client || '-'}</p>
             </div>
-
-            <!-- Short Desc -->
-            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3">
-              ${p.short_description}
-            </p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-3 leading-relaxed">${p.short_description}</p>
           </div>
 
-          <!-- Bottom Action -->
-          <div class="pt-5 mt-5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <span class="text-xs font-mono text-slate-400">${p.app_type || 'System'}</span>
-            <button onclick="openProjectDetail('${p.id}')" class="px-3.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-brand-600 hover:text-white text-slate-700 dark:text-slate-300 text-xs font-semibold transition flex items-center gap-1">
-              Lihat Detail <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+          <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <span class="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-mono">${p.access_type || 'MULTI ROLE'}</span>
+            <button onclick="openProjectDetail('${p.id}')" class="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-1">
+              Lihat Detail <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
             </button>
           </div>
         </div>
@@ -1590,35 +2088,113 @@
       lucide.createIcons();
     }
 
-    function getStatusBadgeClass(status) {
-      switch (status) {
-        case 'PRODUCTION': return 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800';
-        case 'SOON': return 'bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800';
-        case 'DEVELOPMENT': return 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800';
-        case 'TESTING': return 'bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-800';
-        case 'PLANNED': return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700';
-        default: return 'bg-slate-100 text-slate-700';
-      }
+    // ------------------------------------------------------------------------
+    // CLIENTS MODULE: PROVINSI -> KAB/KOTA -> INSTANSI & PROYEK
+    // ------------------------------------------------------------------------
+    function switchClientSegment(segment) {
+      activeClientSegment = segment;
+      ['all', 'Pemerintah', 'Swasta'].forEach(s => {
+        const btn = document.getElementById(s === 'all' ? 'client-tab-all' : (s === 'Pemerintah' ? 'client-tab-gov' : 'client-tab-private'));
+        if (btn) {
+          if (activeClientSegment === s) {
+            btn.className = 'px-4 py-2 rounded-lg bg-white dark:bg-corp-900 shadow-sm text-brand-600 font-bold';
+          } else {
+            btn.className = 'px-4 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:text-brand-600';
+          }
+        }
+      });
+      renderClients();
     }
 
-    // Render Clients
+    function populateProvinceFilter() {
+      const select = document.getElementById('client-province-filter');
+      if (!select) return;
+      const provinces = [...new Set(localClients.map(c => c.province).filter(Boolean))];
+      select.innerHTML = '<option value="ALL">Semua Provinsi</option>' + provinces.map(p => `<option value="${p}">${p}</option>`).join('');
+    }
+
     function renderClients() {
       const container = document.getElementById('clients-grid');
-      container.innerHTML = INITIAL_CLIENTS.map(c => `
-        <div class="p-6 rounded-2xl bg-slate-50 dark:bg-corp-950 border border-slate-200 dark:border-slate-800 space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-semibold px-2.5 py-1 rounded bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-300">${c.category}</span>
-            <span class="text-xs font-mono font-bold text-slate-500">${c.count}</span>
+      if (!container) return;
+
+      const searchQuery = (document.getElementById('client-search-input')?.value || '').toLowerCase().trim();
+      const selectedProv = document.getElementById('client-province-filter')?.value || 'ALL';
+
+      let filtered = localClients;
+
+      if (activeClientSegment !== 'all') {
+        filtered = filtered.filter(c => c.sector === activeClientSegment);
+      }
+
+      if (selectedProv !== 'ALL') {
+        filtered = filtered.filter(c => c.province === selectedProv);
+      }
+
+      if (searchQuery) {
+        filtered = filtered.filter(c => 
+          (c.name && c.name.toLowerCase().includes(searchQuery)) ||
+          (c.province && c.province.toLowerCase().includes(searchQuery)) ||
+          (c.city && c.city.toLowerCase().includes(searchQuery))
+        );
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="col-span-1 sm:col-span-2 lg:col-span-3 text-center py-12 bg-white dark:bg-corp-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-slate-400 text-xs">Tidak ditemukan data klien yang sesuai dengan kriteria filter.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(c => {
+        const isGov = c.sector === 'Pemerintah';
+        const projectList = Array.isArray(c.project_ids) ? c.project_ids : [];
+        const projectCount = projectList.length;
+
+        return `
+          <div class="p-5 sm:p-6 rounded-2xl bg-slate-50 dark:bg-corp-950 border border-slate-200 dark:border-slate-800 hover:border-brand-500/50 transition-all space-y-4 flex flex-col justify-between shadow-sm hover:shadow-md">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800/80 pb-2.5">
+                <div class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-semibold text-[11px] truncate">
+                  <i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-600 shrink-0"></i>
+                  <span class="text-slate-900 dark:text-slate-100">${c.province || 'Provinsi'}</span>
+                  <span class="text-slate-400">•</span>
+                  <span class="text-brand-600 dark:text-brand-400">${c.city || 'Kabupaten/Kota'}</span>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${isGov ? 'bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'}">
+                  ${isGov ? '🏛️ Pemerintah' : '🏢 Swasta'}
+                </span>
+              </div>
+
+              <div class="flex items-start gap-3 pt-1">
+                ${c.logo 
+                  ? `<img src="${c.logo}" alt="${c.name}" class="w-10 h-10 object-contain rounded-lg bg-white p-1 border border-slate-200 shrink-0" onerror="this.src='https://placehold.co/40x40/e2e8f0/475569?text=INSTANSI'" />`
+                  : `<div class="w-10 h-10 rounded-xl ${isGov ? 'bg-sky-50 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300 border border-sky-200 dark:border-sky-800' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'} flex items-center justify-center font-black text-xs shrink-0 shadow-sm">
+                      ${isGov ? '<i data-lucide="landmark" class="w-5 h-5"></i>' : '<i data-lucide="building-2" class="w-5 h-5"></i>'}
+                     </div>`
+                }
+                <div>
+                  <h4 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-snug">${c.name}</h4>
+                  <span class="text-[11px] font-medium text-slate-400 mt-0.5 block">${projectCount} Sistem Diimplementasikan</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-1.5">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Sistem Terpasang:</span>
+              <div class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                ${projectCount > 0 
+                  ? projectList.map(pName => `<span class="px-2.5 py-1 rounded-md bg-white dark:bg-corp-900 text-[11px] font-mono font-medium text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 flex items-center gap-1 shadow-xs"><i data-lucide="check" class="w-3 h-3 text-emerald-500"></i>${pName}</span>`).join('')
+                  : `<span class="text-[11px] text-slate-400 italic">Belum ada sistem ditautkan</span>`
+                }
+              </div>
+            </div>
           </div>
-          <h4 class="font-bold text-base text-slate-900 dark:text-white">${c.name}</h4>
-          <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">${c.desc}</p>
-        </div>
-      `).join('');
+        `;
+      }).join('');
+      lucide.createIcons();
     }
 
-    // Render Experience
     function renderExperience() {
       const container = document.getElementById('experience-timeline');
+      if (!container) return;
       container.innerHTML = INITIAL_EXPERIENCES.map(exp => `
         <div class="relative pl-6 sm:pl-8 border-l-2 border-brand-500 space-y-3">
           <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-white dark:bg-corp-950 border-4 border-brand-500"></div>
@@ -1637,7 +2213,7 @@
     }
 
     // ------------------------------------------------------------------------
-    // PROJECT DETAIL MODAL (RESPECTS CONTENT VISIBILITY STRICTLY)
+    // PROJECT DETAIL MODAL CONTROLLER
     // ------------------------------------------------------------------------
     function openProjectDetail(projectId) {
       const p = localProjects.find(item => item.id == projectId);
@@ -1652,25 +2228,19 @@
       document.getElementById('modal-project-client').innerText = `Klien: ${p.client || 'Instansi Terkait'}`;
       document.getElementById('modal-project-short-desc').innerText = p.short_description;
 
-      // 1. Problem & Solution Visibility
       toggleVisibilityElement('modal-problem-section', p.show_problem && p.problem, () => {
         document.getElementById('modal-project-problem').innerText = p.problem;
       });
       toggleVisibilityElement('modal-solution-section', p.show_solution && p.solution, () => {
         document.getElementById('modal-project-solution').innerText = p.solution;
       });
-
-      // 2. Background Visibility (Optional in PRD)
       toggleVisibilityElement('modal-background-section', p.show_background && p.background, () => {
         document.getElementById('modal-project-background').innerText = p.background;
       });
-
-      // 3. Objective Visibility (Optional in PRD)
       toggleVisibilityElement('modal-objective-section', p.show_objective && p.objective, () => {
         document.getElementById('modal-project-objective').innerText = p.objective;
       });
 
-      // 4. Role Visibility
       toggleVisibilityElement('modal-role-section', p.show_my_role && p.my_role && p.my_role.length > 0, () => {
         const roles = Array.isArray(p.my_role) ? p.my_role : [p.my_role];
         document.getElementById('modal-project-roles').innerHTML = roles.map(r => `
@@ -1678,7 +2248,6 @@
         `).join('');
       });
 
-      // 5. Features Visibility
       toggleVisibilityElement('modal-features-section', p.show_features && p.key_features && p.key_features.length > 0, () => {
         const feats = Array.isArray(p.key_features) ? p.key_features : [];
         document.getElementById('modal-project-features').innerHTML = feats.map(f => `
@@ -1688,7 +2257,6 @@
         `).join('');
       });
 
-      // 6. Technology Visibility
       toggleVisibilityElement('modal-tech-section', p.show_technology && p.technology && p.technology.length > 0, () => {
         const techs = Array.isArray(p.technology) ? p.technology : [];
         document.getElementById('modal-project-tech').innerHTML = techs.map(t => `
@@ -1696,136 +2264,314 @@
         `).join('');
       });
 
-      // 7. Result & Impact Visibility
+      // QnA Items
+      const qnaList = Array.isArray(p.qna_items) ? p.qna_items : [];
+      const qnaCounter = document.getElementById('modal-qna-counter');
+      const qnaContainer = document.getElementById('modal-project-qna-list');
+      if (qnaCounter) qnaCounter.innerText = `${qnaList.length} Topik`;
+
+      if (qnaList.length > 0) {
+        qnaContainer.innerHTML = qnaList.map((item, i) => `
+          <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-corp-950 border border-slate-200 dark:border-slate-800 space-y-1.5">
+            <h5 class="font-bold text-xs text-slate-900 dark:text-white flex items-start gap-1.5">
+              <span class="text-brand-600 font-mono font-bold">Q${i+1}:</span> ${escapeHtml(item.q)}
+            </h5>
+            <p class="text-xs text-slate-600 dark:text-slate-300 pl-6 leading-relaxed">
+              ${escapeHtml(item.a)}
+            </p>
+          </div>
+        `).join('');
+      } else {
+        qnaContainer.innerHTML = `<p class="text-xs text-slate-400 italic">Belum ada tanya-jawab teknis untuk proyek ini.</p>`;
+      }
+
       toggleVisibilityElement('modal-result-section', p.show_result && p.result_impact, () => {
         document.getElementById('modal-project-result').innerText = p.result_impact;
       });
 
-      // 8. Project URL Visibility
-      toggleVisibilityElement('modal-url-section', p.show_project_url && p.demo_url, () => {
-        document.getElementById('modal-project-demo-btn').href = p.demo_url || '#';
-      });
+      document.getElementById('modal-url-section').style.display = (p.show_project_url && p.demo_url) ? 'flex' : 'none';
+      if (p.demo_url) {
+        document.getElementById('modal-project-demo-btn').href = p.demo_url;
+      }
 
-      document.getElementById('project-detail-modal').classList.remove('hidden');
+      document.getElementById('project-detail-modal')?.classList.remove('hidden');
       lucide.createIcons();
     }
 
-    function toggleVisibilityElement(elemId, condition, callback) {
-      const el = document.getElementById(elemId);
-      if (condition) {
-        el.classList.remove('hidden');
-        if (callback) callback();
-      } else {
-        el.classList.add('hidden');
-      }
-    }
-
     function closeProjectModal() {
-      document.getElementById('project-detail-modal').classList.add('hidden');
+      document.getElementById('project-detail-modal')?.classList.add('hidden');
+    }
+
+    function toggleVisibilityElement(elementId, condition, populateFn) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      if (condition) {
+        el.style.display = '';
+        if (populateFn) populateFn();
+      } else {
+        el.style.display = 'none';
+      }
     }
 
     // ------------------------------------------------------------------------
-    // ADMIN PANEL & CMS CONTROLLER
+    // ADMIN DASHBOARD & CMS CONTROLLER
     // ------------------------------------------------------------------------
-    function toggleAdminView() {
-      const publicView = document.getElementById('public-view');
-      const adminView = document.getElementById('admin-view');
-      const label = document.getElementById('admin-btn-label');
+    function renderAdminDashboard() {
+      const total = localProjects.filter(p => !p.is_deleted).length;
+      const prod = localProjects.filter(p => !p.is_deleted && p.status === 'PRODUCTION').length;
+      const soon = localProjects.filter(p => !p.is_deleted && (p.status === 'SOON' || p.status === 'PLANNED')).length;
 
-      if (adminView.classList.contains('hidden')) {
-        adminView.classList.remove('hidden');
-        publicView.classList.add('hidden');
-        label.innerText = 'Tutup CMS';
-        renderAdminDashboard();
-      } else {
-        adminView.classList.add('hidden');
-        publicView.classList.remove('hidden');
-        label.innerText = 'CMS Admin';
-      }
+      if (document.getElementById('stat-total-projects')) document.getElementById('stat-total-projects').innerText = total;
+      if (document.getElementById('stat-prod-projects')) document.getElementById('stat-prod-projects').innerText = prod;
+      if (document.getElementById('stat-soon-projects')) document.getElementById('stat-soon-projects').innerText = soon;
+      if (document.getElementById('stat-total-clients')) document.getElementById('stat-total-clients').innerText = localClients.length;
+      if (document.getElementById('stat-total-exp')) document.getElementById('stat-total-exp').innerText = INITIAL_EXPERIENCES.length;
+      if (document.getElementById('stat-total-skills')) document.getElementById('stat-total-skills').innerText = INITIAL_SKILLS.length;
+
+      renderAdminProjectsTable();
+      renderAdminClients();
+      renderAdminAuditTable();
     }
 
     function switchAdminTab(tabName) {
-      const tabs = ['projects', 'clients', 'profile', 'audit', 'settings'];
-      tabs.forEach(t => {
-        document.getElementById(`tab-content-${t}`).classList.add('hidden');
+      ['projects', 'clients', 'profile', 'audit', 'settings'].forEach(t => {
         const btn = document.getElementById(`tab-btn-${t}`);
-        if (btn) {
-          btn.className = 'px-4 py-2 rounded-lg hover:bg-white/60 dark:hover:bg-corp-900/60 text-slate-600 dark:text-slate-300';
+        const content = document.getElementById(`tab-content-${t}`);
+        if (btn && content) {
+          if (t === tabName) {
+            btn.className = 'px-4 py-2 rounded-lg bg-white dark:bg-corp-900 shadow-sm text-brand-600 font-bold';
+            content.classList.remove('hidden');
+          } else {
+            btn.className = 'px-4 py-2 rounded-lg hover:bg-white/60 dark:hover:bg-corp-900/60 text-slate-600 dark:text-slate-300';
+            content.classList.add('hidden');
+          }
         }
       });
-      document.getElementById(`tab-content-${tabName}`).classList.remove('hidden');
-      const activeBtn = document.getElementById(`tab-btn-${tabName}`);
-      if (activeBtn) {
-        activeBtn.className = 'px-4 py-2 rounded-lg bg-white dark:bg-corp-900 shadow-sm text-brand-600 font-bold';
-      }
+      lucide.createIcons();
     }
 
-    function renderAdminDashboard() {
-      // Statistics
-      const total = localProjects.filter(p => !p.is_deleted).length;
-      const prod = localProjects.filter(p => p.status === 'PRODUCTION' && !p.is_deleted).length;
-      const soon = localProjects.filter(p => p.status === 'SOON' && !p.is_deleted).length;
-
-      document.getElementById('stat-total-projects').innerText = total;
-      document.getElementById('stat-prod-projects').innerText = prod;
-      document.getElementById('stat-soon-projects').innerText = soon;
-
-      // Table Render
+    function renderAdminProjectsTable() {
       const tbody = document.getElementById('admin-projects-table-body');
-      tbody.innerHTML = localProjects.filter(p => !p.is_deleted).map(p => `
-        <tr class="hover:bg-slate-50 dark:hover:bg-corp-900/50 transition">
-          <td class="p-3 font-semibold text-slate-900 dark:text-white">
-            ${p.name}
-            <span class="block text-[10px] text-slate-400 font-mono">${p.slug}</span>
-          </td>
-          <td class="p-3 text-slate-600 dark:text-slate-400">${p.category || '-'}</td>
-          <td class="p-3 text-slate-600 dark:text-slate-400">${p.client || '-'}</td>
-          <td class="p-3 font-mono text-slate-500">${p.year}</td>
+      if (!tbody) return;
+
+      const activeProjects = localProjects.filter(p => !p.is_deleted);
+      tbody.innerHTML = activeProjects.map(p => `
+        <tr class="hover:bg-slate-50/80 dark:hover:bg-corp-900/50">
+          <td class="p-3 font-semibold text-slate-900 dark:text-white">${p.name}</td>
+          <td class="p-3">${p.category || '-'}</td>
+          <td class="p-3 text-slate-500">${p.client || '-'}</td>
+          <td class="p-3 font-mono">${p.year}</td>
           <td class="p-3"><span class="${getStatusBadgeClass(p.status)} badge-status">${p.status}</span></td>
-          <td class="p-3 font-mono text-[10px]">${p.access_type}</td>
+          <td class="p-3 font-mono">${p.access_type || 'MULTI ROLE'}</td>
           <td class="p-3 text-center">
-            <button onclick="togglePublishStatus('${p.id}')" class="font-bold ${p.is_published ? 'text-emerald-500' : 'text-slate-400'}">
+            <button onclick="togglePublishStatus('${p.id}')" class="px-2 py-0.5 rounded text-[10px] font-bold ${p.is_published ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}">
               ${p.is_published ? 'PUBLISHED' : 'DRAFT'}
             </button>
           </td>
           <td class="p-3 text-center">
-            <button onclick="toggleFeaturedStatus('${p.id}')" class="font-bold ${p.is_featured ? 'text-amber-500' : 'text-slate-400'}">
-              ${p.is_featured ? '★ YES' : '☆ NO'}
+            <button onclick="toggleFeaturedStatus('${p.id}')" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800">
+              <i data-lucide="star" class="w-4 h-4 ${p.is_featured ? 'text-amber-500 fill-amber-500' : 'text-slate-300'}"></i>
             </button>
           </td>
           <td class="p-3 text-right space-x-1">
-            <button onclick="editProjectModal('${p.id}')" class="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-brand-600" title="Edit Proyek">
-              <i data-lucide="edit" class="w-4 h-4"></i>
-            </button>
-            <button onclick="confirmSoftDeleteProject('${p.id}')" class="p-1.5 rounded hover:bg-rose-100 text-rose-600" title="Pindahkan ke Sampah">
-              <i data-lucide="trash-2" class="w-4 h-4"></i>
-            </button>
+            <button onclick="editProjectModal('${p.id}')" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 text-brand-600"><i data-lucide="edit" class="w-4 h-4"></i></button>
+            <button onclick="confirmSoftDeleteProject('${p.id}')" class="p-1 rounded hover:bg-rose-100 dark:hover:bg-rose-950 text-rose-600"><i data-lucide="trash" class="w-4 h-4"></i></button>
           </td>
         </tr>
       `).join('');
-
-      // Audit table
-      const auditTbody = document.getElementById('admin-audit-table-body');
-      auditTbody.innerHTML = auditLogs.map(l => `
-        <tr class="hover:bg-slate-50 dark:hover:bg-corp-900/50">
-          <td class="p-3 font-mono text-slate-400">${l.timestamp}</td>
-          <td class="p-3"><span class="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 font-bold">${l.action}</span></td>
-          <td class="p-3 font-semibold">${l.module}</td>
-          <td class="p-3 text-brand-600 dark:text-brand-400 font-medium">${l.name}</td>
-          <td class="p-3 font-mono text-slate-400">${l.user}</td>
-        </tr>
-      `).join('');
-
       lucide.createIcons();
     }
 
-    // Toggle Publish Status
+    function renderAdminAuditTable() {
+      const tbody = document.getElementById('admin-audit-table-body');
+      if (!tbody) return;
+      tbody.innerHTML = auditLogs.map(l => `
+        <tr class="hover:bg-slate-50/80 dark:hover:bg-corp-900/50">
+          <td class="p-3 font-mono text-slate-400">${l.timestamp}</td>
+          <td class="p-3 font-bold text-brand-600">${l.action}</td>
+          <td class="p-3 font-medium">${l.module}</td>
+          <td class="p-3">${l.name}</td>
+          <td class="p-3 font-mono text-slate-500">${l.user}</td>
+        </tr>
+      `).join('');
+    }
+
+    function recordAudit(action, module, name) {
+      const now = new Date();
+      const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      auditLogs.unshift({
+        timestamp: `${timeStr} WIB`,
+        action,
+        module,
+        name,
+        user: currentUser ? currentUser.email : 'admin'
+      });
+      renderAdminAuditTable();
+    }
+
+    // ------------------------------------------------------------------------
+    // CLIENT ADMIN & CHECKBOX SELECTOR
+    // ------------------------------------------------------------------------
+    function renderAdminClients() {
+      const container = document.getElementById('admin-clients-list');
+      if (!container) return;
+
+      container.innerHTML = localClients.map(c => {
+        const isGov = c.sector === 'Pemerintah';
+        const projectList = Array.isArray(c.project_ids) ? c.project_ids : [];
+
+        return `
+          <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-corp-950 space-y-3 flex flex-col justify-between">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isGov ? 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'}">
+                  ${isGov ? 'Pemerintah' : 'Swasta'}
+                </span>
+                <div class="flex items-center gap-1">
+                  <button onclick="editClientModal('${c.id}')" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 text-brand-600" title="Edit Klien"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                  <button onclick="deleteClient('${c.id}')" class="p-1 rounded hover:bg-rose-100 text-rose-600" title="Hapus Klien"><i data-lucide="trash" class="w-3.5 h-3.5"></i></button>
+                </div>
+              </div>
+              <div class="text-[11px] text-slate-500 font-semibold flex items-center gap-1">
+                <i data-lucide="map-pin" class="w-3 h-3 text-brand-600"></i> ${c.province || '-'} • ${c.city || '-'}
+              </div>
+              <h4 class="font-bold text-sm text-slate-900 dark:text-white leading-tight">${c.name}</h4>
+            </div>
+
+            <div class="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1">
+              <span class="text-[10px] font-bold text-slate-400 block uppercase">Proyek Terpilih (${projectList.length}):</span>
+              <div class="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+                ${projectList.length > 0 
+                  ? projectList.map(pName => `<span class="px-2 py-0.5 rounded bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 text-[10px] font-mono border border-brand-200 dark:border-brand-800">${pName}</span>`).join('')
+                  : `<span class="text-[10px] text-slate-400 italic">Belum ada proyek dipilih</span>`
+                }
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function populateClientProjectsChecklist(selectedNames = []) {
+      const container = document.getElementById('form-client-projects-selector');
+      if (!container) return;
+
+      const activeProjects = localProjects.filter(p => !p.is_deleted);
+      
+      container.innerHTML = activeProjects.map(p => {
+        const isChecked = selectedNames.includes(p.name);
+        return `
+          <label class="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-corp-900 border border-slate-200 dark:border-slate-800 hover:border-brand-500 cursor-pointer text-xs transition">
+            <input type="checkbox" name="client_project_checkbox" value="${escapeHtml(p.name)}" ${isChecked ? 'checked' : ''} onchange="updateSelectedProjectsCount()" class="rounded text-brand-600 focus:ring-brand-500" />
+            <span class="font-semibold text-slate-800 dark:text-slate-200 truncate">${p.name}</span>
+          </label>
+        `;
+      }).join('');
+
+      updateSelectedProjectsCount();
+    }
+
+    function updateSelectedProjectsCount() {
+      const countLabel = document.getElementById('form-selected-projects-count');
+      const checkedBoxes = document.querySelectorAll('input[name="client_project_checkbox"]:checked');
+      if (countLabel) {
+        countLabel.innerText = `${checkedBoxes.length} Proyek`;
+      }
+    }
+
+    function openClientFormModal() {
+      document.getElementById('form-client-id').value = '';
+      document.getElementById('client-form-title').innerText = 'Tambah Klien Baru';
+      document.getElementById('form-client-province').value = '';
+      document.getElementById('form-client-city').value = '';
+      document.getElementById('form-client-name').value = '';
+      document.getElementById('form-client-sector').value = 'Pemerintah';
+      document.getElementById('form-client-logo').value = '';
+      populateClientProjectsChecklist([]);
+      document.getElementById('client-form-modal')?.classList.remove('hidden');
+    }
+
+    function editClientModal(id) {
+      const c = localClients.find(item => item.id == id);
+      if (!c) return;
+      document.getElementById('form-client-id').value = c.id;
+      document.getElementById('client-form-title').innerText = `Ubah Klien: ${c.name}`;
+      document.getElementById('form-client-province').value = c.province || '';
+      document.getElementById('form-client-city').value = c.city || '';
+      document.getElementById('form-client-name').value = c.name;
+      document.getElementById('form-client-sector').value = c.sector || 'Pemerintah';
+      document.getElementById('form-client-logo').value = c.logo || '';
+      populateClientProjectsChecklist(c.project_ids || []);
+      document.getElementById('client-form-modal')?.classList.remove('hidden');
+    }
+
+    function closeClientFormModal() {
+      document.getElementById('client-form-modal')?.classList.add('hidden');
+    }
+
+    function handleClientFormSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('form-client-id').value;
+      const province = document.getElementById('form-client-province').value.trim();
+      const city = document.getElementById('form-client-city').value.trim();
+      const name = document.getElementById('form-client-name').value.trim();
+      const sector = document.getElementById('form-client-sector').value;
+      const logo = document.getElementById('form-client-logo').value.trim();
+
+      const checkedBoxes = document.querySelectorAll('input[name="client_project_checkbox"]:checked');
+      const project_ids = Array.from(checkedBoxes).map(cb => cb.value);
+
+      if (project_ids.length === 0) {
+        showToast('Pilih minimal 1 proyek yang diimplementasikan untuk instansi ini.', 'error');
+        return;
+      }
+
+      if (id) {
+        const idx = localClients.findIndex(c => c.id == id);
+        if (idx !== -1) {
+          localClients[idx] = { ...localClients[idx], province, city, name, sector, logo, project_ids };
+          recordAudit('UPDATE', 'Clients', `${name} (${city})`);
+          showToast(`Data klien '${name}' diperbarui.`);
+        }
+      } else {
+        const newClient = {
+          id: 'c_' + Date.now(),
+          province, city, name, sector, logo, project_ids
+        };
+        localClients.push(newClient);
+        recordAudit('CREATE', 'Clients', `${name} (${city})`);
+        showToast(`Klien baru '${name}' berhasil ditambahkan.`);
+      }
+
+      saveClientsToStorage();
+      populateProvinceFilter();
+      closeClientFormModal();
+      renderClients();
+      renderAdminClients();
+    }
+
+    function deleteClient(id) {
+      const c = localClients.find(item => item.id == id);
+      if (!c) return;
+      if (confirm(`Apakah Anda yakin ingin menghapus klien '${c.name}'?`)) {
+        localClients = localClients.filter(item => item.id != id);
+        recordAudit('DELETE', 'Clients', c.name);
+        saveClientsToStorage();
+        renderClients();
+        renderAdminClients();
+        showToast(`Klien '${c.name}' telah dihapus.`, 'error');
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // TOGGLE STATUS PROYEK
+    // ------------------------------------------------------------------------
     async function togglePublishStatus(id) {
       const p = localProjects.find(item => item.id == id);
       if (!p) return;
       p.is_published = !p.is_published;
       
-      // Update ke Supabase jika terhubung
       if (supabaseClient && currentUser) {
         try {
           await supabaseClient.from('projects').update({ is_published: p.is_published }).eq('id', id);
@@ -1841,13 +2587,11 @@
       showToast(p.is_published ? `Proyek ${p.name} dipublikasikan.` : `Proyek ${p.name} diset ke Draft.`);
     }
 
-    // Toggle Featured Status
     async function toggleFeaturedStatus(id) {
       const p = localProjects.find(item => item.id == id);
       if (!p) return;
       p.is_featured = !p.is_featured;
 
-      // Update ke Supabase jika terhubung
       if (supabaseClient && currentUser) {
         try {
           await supabaseClient.from('projects').update({ is_featured: p.is_featured }).eq('id', id);
@@ -1863,7 +2607,6 @@
       showToast(`Status Featured ${p.name} diperbarui.`);
     }
 
-    // Confirm Soft Delete
     async function confirmSoftDeleteProject(id) {
       const p = localProjects.find(item => item.id == id);
       if (!p) return;
@@ -1886,22 +2629,90 @@
       }
     }
 
-    function recordAudit(action, module, name) {
-      auditLogs.unshift({
-        timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-        action,
-        module,
-        name,
-        user: currentUser ? currentUser.email : 'admin@icepulnpyqbrngpsodxp'
-      });
+    // ------------------------------------------------------------------------
+    // Q & A DYNAMIC FORM BUILDER (MAX 10 PER PROJECT)
+    // ------------------------------------------------------------------------
+    function autoGenerateSlugIfEmpty() {
+      const slugInput = document.getElementById('form-project-slug');
+      const nameInput = document.getElementById('form-project-name');
+      if (!slugInput || !nameInput) return;
+      if (!slugInput.value || slugInput.dataset.autogenerated === "true") {
+        slugInput.value = nameInput.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        slugInput.dataset.autogenerated = "true";
+      }
     }
 
-    // Project Form (Create / Update)
+    function renderQnAFormItems() {
+      const container = document.getElementById('form-qna-container');
+      const countBadge = document.getElementById('qna-count-badge');
+      const addBtn = document.getElementById('btn-add-qna');
+      
+      if (!container || !countBadge || !addBtn) return;
+
+      countBadge.innerText = `${currentProjectFormQnA.length}/10`;
+      if (currentProjectFormQnA.length >= 10) {
+        addBtn.disabled = true;
+        addBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      } else {
+        addBtn.disabled = false;
+        addBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+
+      if (currentProjectFormQnA.length === 0) {
+        container.innerHTML = `<p class="text-[11px] text-slate-400 italic">Belum ada tanya-jawab teknis ditambahkan (maksimal 10 item).</p>`;
+        return;
+      }
+
+      container.innerHTML = currentProjectFormQnA.map((item, index) => `
+        <div class="p-3 rounded-lg bg-white dark:bg-corp-900 border border-slate-200 dark:border-slate-800 space-y-2 relative group">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-[11px] text-brand-600 dark:text-brand-400 flex items-center gap-1">
+              <i data-lucide="help-circle" class="w-3.5 h-3.5"></i> Pertanyaan #${index + 1}
+            </span>
+            <button type="button" onclick="removeQnAItemForm(${index})" class="text-rose-500 hover:text-rose-700 text-[11px] font-semibold flex items-center gap-0.5">
+              <i data-lucide="trash" class="w-3 h-3"></i> Hapus
+            </button>
+          </div>
+          <input type="text" placeholder="Tuliskan pertanyaan (misal: Bagaimana penanganan data di RSUD?)" value="${escapeHtml(item.q || '')}" oninput="updateQnAItemForm(${index}, 'q', this.value)" class="w-full p-2 text-xs rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950 font-medium" />
+          <textarea rows="2" placeholder="Tuliskan jawaban teknis/solusi..." oninput="updateQnAItemForm(${index}, 'a', this.value)" class="w-full p-2 text-xs rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950">${escapeHtml(item.a || '')}</textarea>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function addQnAItemForm() {
+      if (currentProjectFormQnA.length >= 10) {
+        showToast('Maksimal 10 pertanyaan Q&A per proyek.', 'error');
+        return;
+      }
+      currentProjectFormQnA.push({ q: '', a: '' });
+      renderQnAFormItems();
+    }
+
+    function removeQnAItemForm(index) {
+      currentProjectFormQnA.splice(index, 1);
+      renderQnAFormItems();
+    }
+
+    function updateQnAItemForm(index, field, value) {
+      if (currentProjectFormQnA[index]) {
+        currentProjectFormQnA[index][field] = value;
+      }
+    }
+
+    function escapeHtml(string) {
+      return String(string || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // ------------------------------------------------------------------------
+    // PROJECT CRUD FORM
+    // ------------------------------------------------------------------------
     function openProjectFormModal() {
       document.getElementById('form-project-id').value = '';
       document.getElementById('project-form-title').innerText = 'Tambah Proyek Baru';
       document.getElementById('form-project-name').value = '';
       document.getElementById('form-project-slug').value = '';
+      delete document.getElementById('form-project-slug').dataset.autogenerated;
       document.getElementById('form-project-short-desc').value = '';
       document.getElementById('form-project-year').value = new Date().getFullYear();
       document.getElementById('form-project-problem').value = '';
@@ -1910,7 +2721,9 @@
       document.getElementById('form-project-objective').value = '';
       document.getElementById('form-project-result').value = '';
       document.getElementById('form-project-notes').value = '';
-      document.getElementById('project-form-modal').classList.remove('hidden');
+      currentProjectFormQnA = [];
+      renderQnAFormItems();
+      document.getElementById('project-form-modal')?.classList.remove('hidden');
     }
 
     function editProjectModal(id) {
@@ -1920,21 +2733,23 @@
       document.getElementById('form-project-id').value = p.id;
       document.getElementById('project-form-title').innerText = `Ubah Proyek: ${p.name}`;
       document.getElementById('form-project-name').value = p.name;
-      document.getElementById('form-project-slug').value = p.slug;
+      document.getElementById('form-project-slug').value = p.slug || '';
       document.getElementById('form-project-short-desc').value = p.short_description || '';
       document.getElementById('form-project-year').value = p.year || '2024';
       document.getElementById('form-project-status').value = p.status || 'DEVELOPMENT';
       document.getElementById('form-project-app-type').value = p.app_type || 'Information System';
       document.getElementById('form-project-access-type').value = p.access_type || 'MULTI ROLE';
       document.getElementById('form-project-category').value = p.category || 'Pemerintahan';
-      document.getElementById('form-project-client').value = p.client || 'Pemerintah Daerah';
+      document.getElementById('form-project-client').value = p.client || 'Badan Pengelola Keuangan & Aset Daerah (BPKAD)';
 
       document.getElementById('form-project-problem').value = p.problem || '';
       document.getElementById('form-project-solution').value = p.solution || '';
       document.getElementById('form-project-background').value = p.background || '';
       document.getElementById('form-project-objective').value = p.objective || '';
-      document.getElementById('form-project-roles').value = Array.isArray(p.my_role) ? p.my_role.join(', ') : (p.my_role || '');
       document.getElementById('form-project-result').value = p.result_impact || '';
+
+      currentProjectFormQnA = Array.isArray(p.qna_items) ? JSON.parse(JSON.stringify(p.qna_items)) : [];
+      renderQnAFormItems();
 
       document.getElementById('form-vis-background').checked = !!p.show_background;
       document.getElementById('form-vis-problem').checked = p.show_problem !== false;
@@ -1947,22 +2762,30 @@
       document.getElementById('form-project-featured').checked = !!p.is_featured;
       document.getElementById('form-project-notes').value = p.internal_notes || '';
 
-      document.getElementById('project-form-modal').classList.remove('hidden');
+      document.getElementById('project-form-modal')?.classList.remove('hidden');
     }
 
     function closeProjectFormModal() {
-      document.getElementById('project-form-modal').classList.add('hidden');
+      document.getElementById('project-form-modal')?.classList.add('hidden');
     }
 
     async function handleProjectFormSubmit(e) {
       e.preventDefault();
       const id = document.getElementById('form-project-id').value;
-      const rolesInput = document.getElementById('form-project-roles').value;
-      const rolesArray = rolesInput.split(',').map(r => r.trim()).filter(Boolean);
+      const name = document.getElementById('form-project-name').value.trim();
+      let slug = document.getElementById('form-project-slug').value.trim();
+      
+      if (!slug) {
+        slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      }
+
+      const validQnA = currentProjectFormQnA
+        .filter(item => item.q && item.q.trim() && item.a && item.a.trim())
+        .slice(0, 10);
 
       const payload = {
-        name: document.getElementById('form-project-name').value.trim(),
-        slug: document.getElementById('form-project-slug').value.trim(),
+        name,
+        slug,
         short_description: document.getElementById('form-project-short-desc').value.trim(),
         year: document.getElementById('form-project-year').value.trim(),
         status: document.getElementById('form-project-status').value,
@@ -1974,7 +2797,7 @@
         solution: document.getElementById('form-project-solution').value.trim(),
         background: document.getElementById('form-project-background').value.trim(),
         objective: document.getElementById('form-project-objective').value.trim(),
-        my_role: rolesArray,
+        qna_items: validQnA,
         result_impact: document.getElementById('form-project-result').value.trim(),
         internal_notes: document.getElementById('form-project-notes').value.trim(),
         show_background: document.getElementById('form-vis-background').checked,
@@ -1989,7 +2812,6 @@
       };
 
       if (id) {
-        // Update existing
         const idx = localProjects.findIndex(p => p.id == id);
         if (idx !== -1) {
           localProjects[idx] = { ...localProjects[idx], ...payload };
@@ -2006,11 +2828,11 @@
           showToast(`Proyek '${payload.name}' berhasil diperbarui.`);
         }
       } else {
-        // Create new
         const newProj = {
           id: Date.now().toString(),
+          my_role: ['Senior IT Consultant', 'System Analyst', 'Implementator'],
           key_features: ['Modul Utama', 'Integrasi Pelaporan'],
-          technology: ['PostgreSQL', 'Web Application'],
+          technology: ['PostgreSQL', 'Enterprise Web Architecture'],
           ...payload
         };
         localProjects.unshift(newProj);
@@ -2034,7 +2856,7 @@
     }
 
     // ------------------------------------------------------------------------
-    // AUTHENTICATION & CONFIGURATION MODALS
+    // AUTHENTICATION MODAL
     // ------------------------------------------------------------------------
     function openAuthModal() {
       if (currentUser) {
@@ -2049,11 +2871,11 @@
         }
         return;
       }
-      document.getElementById('auth-modal').classList.remove('hidden');
+      document.getElementById('auth-modal')?.classList.remove('hidden');
     }
 
     function closeAuthModal() {
-      document.getElementById('auth-modal').classList.add('hidden');
+      document.getElementById('auth-modal')?.classList.add('hidden');
     }
 
     async function handleAuthLogin(e) {
@@ -2067,7 +2889,7 @@
         document.getElementById('auth-action-btn').innerHTML = '<i data-lucide="log-out" class="w-4 h-4"></i> Keluar';
         closeAuthModal();
         recordAudit('LOGIN', 'Auth', email);
-        showToast('Masuk sebagai Administrator (Mode Simulasi).');
+        showToast('Masuk sebagai Administrator.');
         lucide.createIcons();
         return;
       }
@@ -2080,30 +2902,10 @@
         document.getElementById('auth-action-btn').innerHTML = '<i data-lucide="log-out" class="w-4 h-4"></i> Keluar';
         closeAuthModal();
         recordAudit('LOGIN', 'Supabase Auth', currentUser.email);
-        showToast('Autentikasi Supabase Berhasil!');
+        showToast('Autentikasi Administrator Berhasil!');
         lucide.createIcons();
       } catch (err) {
-        showToast(err.message || 'Gagal login. Periksa email & kata sandi di Supabase Authentication.', 'error');
-      }
-    }
-
-    function openConfigModal() {
-      document.getElementById('config-modal').classList.remove('hidden');
-    }
-
-    function closeConfigModal() {
-      document.getElementById('config-modal').classList.add('hidden');
-    }
-
-    function saveConfigFromModal() {
-      const url = document.getElementById('cfg-url').value.trim();
-      const key = document.getElementById('cfg-key').value.trim();
-      if (url && key) {
-        localStorage.setItem('sb_project_url', url);
-        localStorage.setItem('sb_anon_key', key);
-        closeConfigModal();
-        showToast('Kredensial disimpan! Memuat ulang...');
-        setTimeout(() => location.reload(), 800);
+        showToast(err.message || 'Gagal login. Periksa email & kata sandi.', 'error');
       }
     }
 
@@ -2113,31 +2915,54 @@
       if (url && key) {
         localStorage.setItem('sb_project_url', url);
         localStorage.setItem('sb_anon_key', key);
-        showToast('Konfigurasi Supabase diperbarui.');
+        showToast('Konfigurasi database serverless diperbarui.');
         setTimeout(() => location.reload(), 800);
       }
     }
 
-    function saveProfileSettings() {
-      const stmt = document.getElementById('setting-hero-stmt').value;
-      const cta = document.getElementById('setting-cta-headline').value;
-      document.getElementById('hero-statement').innerText = `"${stmt}"`;
-      document.getElementById('cta-headline').innerText = cta;
-      recordAudit('UPDATE', 'Settings', 'Profile & CTA modified');
-      showToast('Pengaturan profil dan CTA disimpan.');
+    function applyContactLinks(wa, email, msg) {
+      const cleanWa = (wa || '6281234567890').replace(/[^0-9]/g, '');
+      const encodedMsg = encodeURIComponent(msg || 'Halo Senior IT Consultant, saya tertarik berdiskusi mengenai kebutuhan sistem.');
+      const waUrl = `https://wa.me/${cleanWa}?text=${encodedMsg}`;
+      const mailUrl = `mailto:${email || 'consultant@example.com'}?subject=${encodeURIComponent('Konsultasi Sistem Informasi')}`;
+
+      const heroWa = document.getElementById('hero-cta-wa');
+      const heroMail = document.getElementById('hero-cta-email');
+      const ctaWa = document.getElementById('cta-wa-btn');
+      const ctaMail = document.getElementById('cta-email-btn');
+      const contactMail = document.getElementById('contact-email');
+      const contactPhone = document.getElementById('contact-phone');
+
+      if (heroWa) heroWa.href = waUrl;
+      if (heroMail) heroMail.href = mailUrl;
+      if (ctaWa) ctaWa.href = waUrl;
+      if (ctaMail) ctaMail.href = mailUrl;
+      if (contactMail) contactMail.innerText = email || 'consultant@example.com';
+      if (contactPhone) contactPhone.innerText = '+' + cleanWa;
     }
 
     function handleContactSubmit(e) {
       e.preventDefault();
       const name = document.getElementById('contact-form-name').value;
       const instansi = document.getElementById('contact-form-instansi').value;
-      showToast(`Terima kasih Bapak/Ibu ${name} (${instansi}), pesan Anda telah diterima!`);
+      const phone = document.getElementById('contact-form-phone').value;
+      const message = document.getElementById('contact-form-message').value;
+
+      const waNumber = (document.getElementById('setting-wa-number')?.value || '6281234567890').replace(/[^0-9]/g, '');
+      const waText = encodeURIComponent(`*Pesan Konsultasi Portofolio*\nNama: ${name}\nInstansi: ${instansi}\nKontak: ${phone}\nPesan:\n${message}`);
+      
+      window.open(`https://wa.me/${waNumber}?text=${waText}`, '_blank');
+      showToast(`Pesan dialihkan ke WhatsApp resmi. Terima kasih Bapak/Ibu ${name}!`);
       e.target.reset();
     }
 
-    // Toast Notification System
+    // ------------------------------------------------------------------------
+    // TOAST NOTIFICATIONS
+    // ------------------------------------------------------------------------
     function showToast(message, type = 'success') {
       const container = document.getElementById('toast-container');
+      if (!container) return;
+
       const toast = document.createElement('div');
       const isErr = type === 'error';
       toast.className = `p-4 rounded-xl shadow-xl text-xs font-semibold flex items-center gap-2 border pointer-events-auto transition-all transform duration-300 translate-y-2 opacity-0 ${
