@@ -81,10 +81,10 @@
 
   <!-- ================= RUNNING TICKER BAR ================= -->
   <div id="running-ticker-bar" class="bg-gradient-to-r from-corp-950 via-corp-900 to-brand-950 text-white border-b border-slate-800/80 text-xs shadow-sm h-9 flex items-center relative z-50">
-    <div class="h-full px-3 sm:px-4 bg-brand-600/90 text-white flex items-center gap-1.5 shrink-0 z-10 font-bold uppercase tracking-wider text-[11px] shadow-sm">
-      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+    <div id="ticker-status-badge-container" class="h-full px-3 sm:px-4 bg-brand-600/90 text-white flex items-center gap-1.5 shrink-0 z-10 font-bold uppercase tracking-wider text-[11px] shadow-sm">
+      <span id="ticker-pulse-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
       <i data-lucide="radio" class="w-3.5 h-3.5 text-white"></i>
-      <span class="hidden sm:inline">LIVE INFO</span>
+      <span class="hidden sm:inline" id="ticker-badge-text">LIVE INFO</span>
     </div>
 
     <div class="ticker-wrapper flex-1 h-full flex items-center cursor-default overflow-hidden">
@@ -164,10 +164,13 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div class="lg:col-span-8 space-y-6">
-            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 text-xs font-semibold tracking-wide border border-brand-200 dark:border-brand-800">
-              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              Tersedia untuk Konsultasi Sistem & Implementasi Organisasi
+            
+            <!-- Hero Dynamic Status Badge -->
+            <div id="hero-status-pill" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-semibold tracking-wide border border-emerald-200 dark:border-emerald-800 shadow-sm transition-all">
+              <span id="hero-status-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span id="hero-status-text">Memuat status konsultasi...</span>
             </div>
+
             <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
               Senior IT Consultant & <br />
               <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-sky-400">System Implementator</span>
@@ -646,11 +649,24 @@
 
         <!-- TAB 1: PROJECTS -->
         <div id="tab-content-projects" class="p-6 space-y-4">
-          <div class="flex justify-between items-center">
-            <h3 class="font-bold text-base text-slate-800 dark:text-white">Kelola Proyek Portofolio</h3>
-            <button onclick="openProjectFormModal()" class="px-3.5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow">
-              <i data-lucide="plus" class="w-4 h-4"></i> Tambah Proyek Baru
-            </button>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 class="font-bold text-base text-slate-800 dark:text-white">Kelola Proyek Portofolio</h3>
+              <p class="text-xs text-slate-500">Data terhapus (DLT=1) dapat ditinjau dan dipulihkan kembali sewaktu-waktu.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="inline-flex p-1 rounded-lg bg-slate-100 dark:bg-corp-950 border border-slate-200 dark:border-slate-800 text-xs">
+                <button type="button" onclick="setProjectTrashView(false)" id="btn-proj-view-active" class="px-3 py-1.5 rounded-md bg-white dark:bg-corp-900 font-bold text-brand-600 shadow-sm">
+                  Aktif (DLT=0)
+                </button>
+                <button type="button" onclick="setProjectTrashView(true)" id="btn-proj-view-trash" class="px-3 py-1.5 rounded-md text-slate-600 dark:text-slate-300 hover:text-rose-600">
+                  Sampah (DLT=1) <span id="badge-proj-trash-count" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-rose-100 dark:bg-rose-950/80 text-rose-600 font-bold">0</span>
+                </button>
+              </div>
+              <button onclick="openProjectFormModal()" class="px-3.5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow">
+                <i data-lucide="plus" class="w-4 h-4"></i> Tambah Proyek
+              </button>
+            </div>
           </div>
 
           <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
@@ -675,14 +691,24 @@
 
         <!-- TAB 2: CLIENTS -->
         <div id="tab-content-clients" class="p-6 space-y-4 hidden">
-          <div class="flex justify-between items-center">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 class="font-bold text-base text-slate-800 dark:text-white">Daftar Klien / Instansi</h3>
               <p class="text-xs text-slate-500">Kelola daftar klien pemerintah dan swasta beserta mapping sistem proyek yang diimplementasikan.</p>
             </div>
-            <button onclick="openClientFormModal()" class="px-3.5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow">
-              <i data-lucide="plus" class="w-4 h-4"></i> Tambah Klien Baru
-            </button>
+            <div class="flex items-center gap-2">
+              <div class="inline-flex p-1 rounded-lg bg-slate-100 dark:bg-corp-950 border border-slate-200 dark:border-slate-800 text-xs">
+                <button type="button" onclick="setClientTrashView(false)" id="btn-client-view-active" class="px-3 py-1.5 rounded-md bg-white dark:bg-corp-900 font-bold text-brand-600 shadow-sm">
+                  Aktif (DLT=0)
+                </button>
+                <button type="button" onclick="setClientTrashView(true)" id="btn-client-view-trash" class="px-3 py-1.5 rounded-md text-slate-600 dark:text-slate-300 hover:text-rose-600">
+                  Sampah (DLT=1) <span id="badge-client-trash-count" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-rose-100 dark:bg-rose-950/80 text-rose-600 font-bold">0</span>
+                </button>
+              </div>
+              <button onclick="openClientFormModal()" class="px-3.5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow">
+                <i data-lucide="plus" class="w-4 h-4"></i> Tambah Klien
+              </button>
+            </div>
           </div>
           <div id="admin-clients-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs"></div>
         </div>
@@ -694,9 +720,19 @@
               <h3 class="font-bold text-base text-slate-800 dark:text-white">Kompetensi & Keahlian Profesional</h3>
               <p class="text-xs text-slate-500">Kelola daftar keahlian dari aspek regulasi, analisis bisnis, implementasi, hingga teknis perangkat lunak.</p>
             </div>
-            <button onclick="openSkillFormModal()" class="px-3.5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow w-fit">
-              <i data-lucide="plus" class="w-4 h-4"></i> Tambah Keahlian Baru
-            </button>
+            <div class="flex items-center gap-2">
+              <div class="inline-flex p-1 rounded-lg bg-slate-100 dark:bg-corp-950 border border-slate-200 dark:border-slate-800 text-xs">
+                <button type="button" onclick="setSkillTrashView(false)" id="btn-skill-view-active" class="px-3 py-1.5 rounded-md bg-white dark:bg-corp-900 font-bold text-brand-600 shadow-sm">
+                  Aktif (DLT=0)
+                </button>
+                <button type="button" onclick="setSkillTrashView(true)" id="btn-skill-view-trash" class="px-3 py-1.5 rounded-md text-slate-600 dark:text-slate-300 hover:text-rose-600">
+                  Sampah (DLT=1) <span id="badge-skill-trash-count" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-rose-100 dark:bg-rose-950/80 text-rose-600 font-bold">0</span>
+                </button>
+              </div>
+              <button onclick="openSkillFormModal()" class="px-3.5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow w-fit">
+                <i data-lucide="plus" class="w-4 h-4"></i> Tambah Keahlian Baru
+              </button>
+            </div>
           </div>
 
           <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
@@ -717,8 +753,62 @@
         <!-- TAB 4: PROFILE & VISIBILITY -->
         <div id="tab-content-profile" class="p-6 space-y-6 hidden">
           <div>
-            <h3 class="font-bold text-base text-slate-800 dark:text-white">Pengaturan Profil, Konten Tentang & Visibilitas Section</h3>
-            <p class="text-xs text-slate-500">Sesuaikan narasi profil, latar belakang S1 akuntansi, nomor kontak, perusahaan, serta kontrol tampilan section publik.</p>
+            <h3 class="font-bold text-base text-slate-800 dark:text-white">Pengaturan Status Konsultasi, Profil & Visibilitas Section</h3>
+            <p class="text-xs text-slate-500">Atur ketersediaan status konsultasi secara dinamis (termasuk jam kerja), narasi profil, serta kontrol section publik.</p>
+          </div>
+
+          <!-- PENGATURAN STATUS KONSULTASI DINAMIS & JAM KERJA -->
+          <div class="p-5 rounded-xl bg-gradient-to-br from-brand-50/70 to-slate-50 dark:from-brand-950/30 dark:to-corp-950 border border-brand-200 dark:border-brand-800/60 space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <h4 class="font-bold text-xs uppercase tracking-wider text-brand-700 dark:text-brand-300">Pengaturan Status Konsultasi & Jadwal Operasional</h4>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300 font-mono font-bold">Sinkron ke Ticker & Hero</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div>
+                <label class="block font-semibold mb-1 text-slate-800 dark:text-slate-200">1. Pilihan Status Ketersediaan Saat Ini *</label>
+                <select id="setting-consult-status-key" onchange="previewConsultationStatusChange()" class="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-corp-900 font-semibold">
+                  <option value="online">● Online & Siap Berkolaborasi (Hijau)</option>
+                  <option value="field_duty">● Sedang Tugas Lapangan / Respon Terbatas (Kuning)</option>
+                  <option value="busy">● Jadwal Konsultasi Penuh (Waiting List) (Biru)</option>
+                  <option value="offline">● Offline / Libur Operasional (Abu-abu / Merah)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block font-semibold mb-1 text-slate-800 dark:text-slate-200">2. Subteks / Keterangan Tambahan (Opsional)</label>
+                <input type="text" id="setting-consult-custom-note" placeholder="contoh: Menerima konsultasi baru & audit KAK" class="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-corp-900" />
+              </div>
+            </div>
+
+            <div class="p-3.5 rounded-lg bg-white dark:bg-corp-900 border border-slate-200 dark:border-slate-800 space-y-3 text-xs">
+              <label class="flex items-center gap-2.5 font-bold cursor-pointer text-slate-800 dark:text-slate-200">
+                <input type="checkbox" id="setting-consult-use-time" onchange="toggleTimeLimitInputs()" class="rounded text-brand-600 focus:ring-brand-500" checked />
+                <span>Sertakan Rentang Jam Operasional (Mulai s/d Selesai) pada Indikator</span>
+              </label>
+
+              <div id="consult-time-inputs-row" class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                <div>
+                  <label class="block font-semibold mb-1 text-slate-600 dark:text-slate-400">Jam Mulai</label>
+                  <input type="time" id="setting-consult-start-time" value="08:30" class="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950 font-mono" />
+                </div>
+                <div>
+                  <label class="block font-semibold mb-1 text-slate-600 dark:text-slate-400">Jam Selesai</label>
+                  <input type="time" id="setting-consult-end-time" value="17:00" class="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950 font-mono" />
+                </div>
+                <div>
+                  <label class="block font-semibold mb-1 text-slate-600 dark:text-slate-400">Zona Waktu</label>
+                  <select id="setting-consult-timezone" class="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950 font-mono">
+                    <option value="WIB">WIB (Waktu Indonesia Barat)</option>
+                    <option value="WITA">WITA (Waktu Indonesia Tengah)</option>
+                    <option value="WIT">WIT (Waktu Indonesia Timur)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
           </div>
           
           <div class="p-5 rounded-xl bg-slate-50 dark:bg-corp-950 border border-slate-200 dark:border-slate-800 space-y-3">
@@ -797,7 +887,7 @@
           </div>
 
           <button onclick="saveProfileSettings()" class="px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-bold shadow flex items-center gap-2">
-            <i data-lucide="check" class="w-4 h-4"></i> Simpan Seluruh Pengaturan Profil, Visibilitas & Kontak
+            <i data-lucide="check" class="w-4 h-4"></i> Simpan Seluruh Pengaturan Status, Profil & Kontak
           </button>
         </div>
 
@@ -1020,26 +1110,52 @@
     </div>
   </div>
 
-  <!-- ================= AUTH MODAL ================= -->
+  <!-- ================= AUTH MODAL & LUPA PASSWORD ================= -->
   <div id="auth-modal" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex justify-center items-center p-4">
     <div class="bg-white dark:bg-corp-900 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
       <div class="flex justify-between items-center">
-        <h3 class="font-bold text-lg text-slate-900 dark:text-white">Autentikasi Administrator</h3>
+        <h3 id="auth-modal-title" class="font-bold text-lg text-slate-900 dark:text-white">Autentikasi Administrator</h3>
         <button onclick="closeAuthModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
-      <p class="text-xs text-slate-500">Masuk menggunakan akun Supabase Auth Administrator Anda.</p>
       
-      <form onsubmit="handleAuthLogin(event)" class="space-y-3 text-xs">
-        <div>
-          <label class="block font-semibold mb-1">Email Administrator</label>
-          <input type="email" id="auth-email" required placeholder="admin@domain.com" class="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950 outline-none" />
-        </div>
-        <div>
-          <label class="block font-semibold mb-1">Kata Sandi</label>
-          <input type="password" id="auth-password" required placeholder="••••••••" class="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950 outline-none" />
-        </div>
-        <button type="submit" class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-lg transition">Masuk ke CMS</button>
-      </form>
+      <!-- FORM 1: LOGIN UTAMA -->
+      <div id="auth-login-box" class="space-y-3">
+        <p class="text-xs text-slate-500">Masuk menggunakan akun Supabase Auth Administrator Anda.</p>
+        
+        <form onsubmit="handleAuthLogin(event)" class="space-y-3 text-xs">
+          <div>
+            <label class="block font-semibold mb-1">Email Administrator</label>
+            <input type="email" id="auth-email" required placeholder="admin@domain.com" class="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950 outline-none" />
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="font-semibold">Kata Sandi</label>
+              <button type="button" onclick="toggleForgotPasswordView(true)" class="text-[11px] text-brand-600 hover:underline font-medium">Lupa kata sandi?</button>
+            </div>
+            <input type="password" id="auth-password" required placeholder="••••••••" class="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950 outline-none" />
+          </div>
+          <button type="submit" class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-lg transition">Masuk ke CMS</button>
+        </form>
+      </div>
+
+      <!-- FORM 2: LUPA PASSWORD / RESET PASSWORD FLOW -->
+      <div id="auth-forgot-box" class="space-y-3 hidden">
+        <p class="text-xs text-slate-500">Masukkan email akun admin Anda. Supabase Auth akan mengirim tautan pemulihan kata sandi.</p>
+        <form onsubmit="handleForgotPasswordSubmit(event)" class="space-y-3 text-xs">
+          <div>
+            <label class="block font-semibold mb-1">Email Terdaftar</label>
+            <input type="email" id="forgot-auth-email" required placeholder="admin@domain.com" class="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-corp-950 outline-none" />
+          </div>
+          <div class="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-[11px] text-amber-800 dark:text-amber-300">
+            <i data-lucide="info" class="w-3.5 h-3.5 inline mr-1"></i> Jika Anda pemilik proyek Supabase, Anda juga bisa langsung mengubah password tanpa email lewat <strong>Dashboard Supabase > Authentication > Users > Edit User</strong>.
+          </div>
+          <div class="flex items-center gap-2 pt-1">
+            <button type="button" onclick="toggleForgotPasswordView(false)" class="flex-1 py-2 rounded-lg bg-slate-200 dark:bg-slate-800 font-semibold text-xs">Kembali</button>
+            <button type="submit" class="flex-1 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-lg text-xs">Kirim Tautan Reset</button>
+          </div>
+        </form>
+      </div>
+
     </div>
   </div>
 
@@ -1140,7 +1256,7 @@
     </div>
   </div>
 
-  <!-- ================= CONFIRMATION MODAL (PENGGANTI WINDOW.CONFIRM) ================= -->
+  <!-- ================= CONFIRMATION MODAL ================= -->
   <div id="confirm-modal" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex justify-center items-center p-4">
     <div class="bg-white dark:bg-corp-900 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 transform transition-all">
       <div class="flex items-start gap-3 text-rose-600">
@@ -1182,6 +1298,58 @@
     let currentUser = null;
     let pendingConfirmAction = null;
 
+    // Filter status Tampil (DLT=0) vs Sampah (DLT=1)
+    let showProjectTrash = false;
+    let showClientTrash = false;
+    let showSkillTrash = false;
+
+    // Helper memeriksa apakah item aktif (DLT = 0)
+    function isItemActive(item) {
+      return item && (item.dlt === 0 || item.dlt === '0' || item.dlt === undefined || item.dlt === null) && !item.is_deleted;
+    }
+
+    // Status Konsultasi Dinamis Config
+    let consultationConfig = {
+      status_key: "online", // online, field_duty, busy, offline
+      status_label: "Online & Siap Berkolaborasi",
+      custom_note: "",
+      use_time_limit: true,
+      start_time: "08:30",
+      end_time: "17:00",
+      timezone: "WIB"
+    };
+
+    const STATUS_MAP = {
+      online: {
+        label: "Online & Siap Berkolaborasi",
+        heroPillClass: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
+        dotClass: "bg-emerald-500 animate-pulse",
+        tickerBadgeClass: "bg-emerald-600 text-white",
+        colorName: "emerald"
+      },
+      field_duty: {
+        label: "Sedang Tugas Lapangan / Respon Terbatas",
+        heroPillClass: "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+        dotClass: "bg-amber-500 animate-ping",
+        tickerBadgeClass: "bg-amber-600 text-white",
+        colorName: "amber"
+      },
+      busy: {
+        label: "Jadwal Penuh (Waiting List)",
+        heroPillClass: "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800",
+        dotClass: "bg-sky-500 animate-pulse",
+        tickerBadgeClass: "bg-sky-600 text-white",
+        colorName: "sky"
+      },
+      offline: {
+        label: "Offline / Libur Operasional",
+        heroPillClass: "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800",
+        dotClass: "bg-rose-500",
+        tickerBadgeClass: "bg-slate-700 text-white",
+        colorName: "rose"
+      }
+    };
+
     let siteSettings = {
       show_about: true,
       show_expertise: true,
@@ -1201,7 +1369,6 @@
       stat_audit: "100%"
     };
 
-    // Helper: Sanitasi string untuk mencegah XSS
     function escapeHtml(str) {
       if (str === null || str === undefined) return '';
       return String(str)
@@ -1212,7 +1379,6 @@
         .replace(/'/g, '&#039;');
     }
 
-    // Helper: Safe Array / JSON Parser
     function safeArray(val) {
       if (Array.isArray(val)) return val;
       if (typeof val === 'string') {
@@ -1224,7 +1390,6 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
       initTheme();
-      initRunningTicker();
       initSupabase();
       loadLocalStorageData();
       await initAuthListener();
@@ -1232,6 +1397,8 @@
       initStealthAdminAccess();
       applySiteVisibility();
       applyProfileData();
+      applyConsultationStatusVisuals();
+      initRunningTicker();
       populateProvinceFilter();
       renderPublicContent();
       renderAdminDashboard();
@@ -1297,7 +1464,8 @@
         try { 
           localProjects = JSON.parse(sProj).map(p => ({
             ...p,
-            id: p.id || ('p_' + Math.random().toString(36).substring(2, 9))
+            id: p.id || ('p_' + Math.random().toString(36).substring(2, 9)),
+            dlt: (p.dlt !== undefined && p.dlt !== null) ? Number(p.dlt) : (p.is_deleted ? 1 : 0)
           })); 
         } catch (e) {} 
       }
@@ -1307,7 +1475,8 @@
         try { 
           localClients = JSON.parse(sCli).map(c => ({
             ...c,
-            id: c.id || ('c_' + Math.random().toString(36).substring(2, 9))
+            id: c.id || ('c_' + Math.random().toString(36).substring(2, 9)),
+            dlt: (c.dlt !== undefined && c.dlt !== null) ? Number(c.dlt) : (c.is_deleted ? 1 : 0)
           })); 
         } catch (e) {} 
       }
@@ -1317,7 +1486,8 @@
         try { 
           localSkills = JSON.parse(sSkill).map(s => ({
             ...s,
-            id: s.id || ('sk_' + Math.random().toString(36).substring(2, 9))
+            id: s.id || ('sk_' + Math.random().toString(36).substring(2, 9)),
+            dlt: (s.dlt !== undefined && s.dlt !== null) ? Number(s.dlt) : (s.is_active === false ? 1 : 0)
           })); 
         } catch (e) {} 
       }
@@ -1327,6 +1497,9 @@
 
       const sSet = localStorage.getItem('portfolio_site_settings');
       if (sSet) { try { siteSettings = { ...siteSettings, ...JSON.parse(sSet) }; } catch (e) {} }
+
+      const sConsult = localStorage.getItem('portfolio_consultation_status');
+      if (sConsult) { try { consultationConfig = { ...consultationConfig, ...JSON.parse(sConsult) }; } catch (e) {} }
 
       const sAudit = localStorage.getItem('portfolio_audit_logs');
       if (sAudit) { try { auditLogs = JSON.parse(sAudit); } catch (e) {} }
@@ -1347,12 +1520,12 @@
         const { data: dbProj, error: errProj } = await supabaseClient
           .from('projects')
           .select('*')
-          .eq('is_deleted', false)
           .order('display_order', { ascending: true });
 
         if (!errProj && dbProj && dbProj.length > 0) {
           localProjects = dbProj.map(p => ({
             ...p,
+            dlt: (p.dlt !== undefined && p.dlt !== null) ? Number(p.dlt) : (p.is_deleted ? 1 : 0),
             my_role: safeArray(p.my_role),
             key_features: safeArray(p.key_features),
             technology: safeArray(p.technology),
@@ -1364,12 +1537,12 @@
         // 2. Clients
         const { data: dbCli, error: errCli } = await supabaseClient
           .from('clients')
-          .select('*')
-          .eq('is_deleted', false);
+          .select('*');
 
         if (!errCli && dbCli && dbCli.length > 0) {
           localClients = dbCli.map(c => ({
             ...c,
+            dlt: (c.dlt !== undefined && c.dlt !== null) ? Number(c.dlt) : (c.is_deleted ? 1 : 0),
             project_ids: safeArray(c.project_ids)
           }));
           localStorage.setItem('portfolio_clients_data', JSON.stringify(localClients));
@@ -1379,20 +1552,23 @@
         const { data: dbSkills, error: errSkills } = await supabaseClient
           .from('skills')
           .select('*')
-          .eq('is_active', true)
           .order('proficiency_level', { ascending: false });
 
         if (!errSkills && dbSkills && dbSkills.length > 0) {
-          localSkills = dbSkills;
+          localSkills = dbSkills.map(s => ({
+            ...s,
+            dlt: (s.dlt !== undefined && s.dlt !== null) ? Number(s.dlt) : (s.is_active === false ? 1 : 0)
+          }));
           localStorage.setItem('portfolio_skills_data', JSON.stringify(localSkills));
         }
 
-        // 4. Site Settings & Profile
+        // 4. Site Settings, Profile & Consultation Status
         const { data: dbSettings } = await supabaseClient.from('site_settings').select('*');
         if (dbSettings && dbSettings.length > 0) {
           dbSettings.forEach(s => {
             if (s.key === 'company_profile') profileData = { ...profileData, ...s.value };
             if (s.key === 'contact_config') siteSettings = { ...siteSettings, ...s.value };
+            if (s.key === 'consultation_status') consultationConfig = { ...consultationConfig, ...s.value };
           });
         }
 
@@ -1451,7 +1627,7 @@
       };
 
       auditLogs.unshift(newLog);
-      localStorage.setItem('portfolio_audit_logs', JSON.stringify(auditLogs.slice(0, 50)));
+      localStorage.setItem('portfolio_audit_logs', JSON.stringify(auditLogs.slice(0, 30)));
       renderAdminAuditTable();
 
       if (supabaseClient) {
@@ -1463,7 +1639,7 @@
             actor_email: actor
           }]);
         } catch (e) {
-          console.warn('Remote audit log save failed, kept locally:', e);
+          console.warn('Audit record warning:', e.message);
         }
       }
     }
@@ -1471,11 +1647,6 @@
     function renderAdminAuditTable() {
       const tbody = document.getElementById('admin-audit-table-body');
       if (!tbody) return;
-
-      if (auditLogs.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Belum ada riwayat aktivitas.</td></tr>`;
-        return;
-      }
 
       tbody.innerHTML = auditLogs.slice(0, 20).map(log => `
         <tr class="hover:bg-slate-50/70 dark:hover:bg-corp-900/50">
@@ -1488,38 +1659,148 @@
       `).join('');
     }
 
-    // ================= PROJECTS CRUD =================
+    // ================= STATUS KONSULTASI DINAMIS & JAM KERJA =================
+    function getFormattedScheduleText() {
+      if (!consultationConfig.use_time_limit) return '';
+      const start = consultationConfig.start_time || '08:30';
+      const end = consultationConfig.end_time || '17:00';
+      const tz = consultationConfig.timezone || 'WIB';
+      return ` (${start} - ${end} ${tz})`;
+    }
+
+    function applyConsultationStatusVisuals() {
+      const key = consultationConfig.status_key || 'online';
+      const map = STATUS_MAP[key] || STATUS_MAP.online;
+      const statusLabel = consultationConfig.status_label || map.label;
+      const scheduleText = getFormattedScheduleText();
+      const customNote = consultationConfig.custom_note ? ` — ${consultationConfig.custom_note}` : '';
+
+      // 1. Update Hero Pill & Dot
+      const heroPill = document.getElementById('hero-status-pill');
+      const heroDot = document.getElementById('hero-status-dot');
+      const heroText = document.getElementById('hero-status-text');
+
+      if (heroPill && heroDot && heroText) {
+        heroPill.className = `inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide border shadow-sm transition-all ${map.heroPillClass}`;
+        heroDot.className = `w-2.5 h-2.5 rounded-full ${map.dotClass}`;
+        heroText.innerText = `${statusLabel}${scheduleText}${customNote}`;
+      }
+
+      // 2. Update Ticker Indicator Badge & Pulsing Dot
+      const tickerBadgeContainer = document.getElementById('ticker-status-badge-container');
+      const tickerDot = document.getElementById('ticker-pulse-dot');
+      if (tickerBadgeContainer) {
+        tickerBadgeContainer.className = `h-full px-3 sm:px-4 flex items-center gap-1.5 shrink-0 z-10 font-bold uppercase tracking-wider text-[11px] shadow-sm ${map.tickerBadgeClass}`;
+      }
+      if (tickerDot) {
+        tickerDot.className = `w-2 h-2 rounded-full ${map.dotClass}`;
+      }
+
+      // 3. Update Inputs in CMS Form
+      const selectKey = document.getElementById('setting-consult-status-key');
+      const inputNote = document.getElementById('setting-consult-custom-note');
+      const checkUseTime = document.getElementById('setting-consult-use-time');
+      const inputStart = document.getElementById('setting-consult-start-time');
+      const inputEnd = document.getElementById('setting-consult-end-time');
+      const selectTz = document.getElementById('setting-consult-timezone');
+
+      if (selectKey) selectKey.value = key;
+      if (inputNote) inputNote.value = consultationConfig.custom_note || '';
+      if (checkUseTime) checkUseTime.checked = consultationConfig.use_time_limit !== false;
+      if (inputStart) inputStart.value = consultationConfig.start_time || '08:30';
+      if (inputEnd) inputEnd.value = consultationConfig.end_time || '17:00';
+      if (selectTz) selectTz.value = consultationConfig.timezone || 'WIB';
+
+      toggleTimeLimitInputs();
+      renderTickerInfo();
+      lucide.createIcons();
+    }
+
+    function toggleTimeLimitInputs() {
+      const checkUseTime = document.getElementById('setting-consult-use-time');
+      const row = document.getElementById('consult-time-inputs-row');
+      if (checkUseTime && row) {
+        row.style.display = checkUseTime.checked ? 'grid' : 'none';
+      }
+    }
+
+    function previewConsultationStatusChange() {
+      const key = document.getElementById('setting-consult-status-key')?.value || 'online';
+      const map = STATUS_MAP[key] || STATUS_MAP.online;
+      consultationConfig.status_key = key;
+      consultationConfig.status_label = map.label;
+    }
+
+    // ================= PROJECTS CRUD & SOFT DELETE (DLT) =================
+    function setProjectTrashView(isTrash) {
+      showProjectTrash = isTrash;
+      const btnActive = document.getElementById('btn-proj-view-active');
+      const btnTrash = document.getElementById('btn-proj-view-trash');
+      if (btnActive && btnTrash) {
+        if (isTrash) {
+          btnActive.className = 'px-3 py-1.5 rounded-md text-slate-600 dark:text-slate-300 hover:text-brand-600';
+          btnTrash.className = 'px-3 py-1.5 rounded-md bg-white dark:bg-corp-900 font-bold text-rose-600 shadow-sm';
+        } else {
+          btnActive.className = 'px-3 py-1.5 rounded-md bg-white dark:bg-corp-900 font-bold text-brand-600 shadow-sm';
+          btnTrash.className = 'px-3 py-1.5 rounded-md text-slate-600 dark:text-slate-300 hover:text-rose-600';
+        }
+      }
+      renderAdminProjectsTable();
+    }
+
     function renderAdminProjectsTable() {
       const tbody = document.getElementById('admin-projects-table-body');
       if (!tbody) return;
 
-      const activeProjects = localProjects.filter(p => !p.is_deleted);
-      if (activeProjects.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-slate-400">Belum ada proyek terdaftar.</td></tr>`;
+      const trashProjects = localProjects.filter(p => !isItemActive(p));
+      const activeProjects = localProjects.filter(p => isItemActive(p));
+
+      const trashBadge = document.getElementById('badge-proj-trash-count');
+      if (trashBadge) trashBadge.innerText = trashProjects.length;
+
+      const displayList = showProjectTrash ? trashProjects : activeProjects;
+
+      if (displayList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-slate-400">
+          ${showProjectTrash ? 'Tidak ada data proyek di dalam sampah (DLT=1).' : 'Belum ada proyek aktif (DLT=0).'}
+        </td></tr>`;
         return;
       }
 
-      tbody.innerHTML = activeProjects.map(p => `
-        <tr class="hover:bg-slate-50/70 dark:hover:bg-corp-900/50">
-          <td class="p-3 font-semibold text-slate-900 dark:text-white">${escapeHtml(p.name)}</td>
+      tbody.innerHTML = displayList.map(p => `
+        <tr class="hover:bg-slate-50/70 dark:hover:bg-corp-900/50 ${!isItemActive(p) ? 'bg-rose-50/30 dark:bg-rose-950/20' : ''}">
+          <td class="p-3 font-semibold text-slate-900 dark:text-white">
+            ${escapeHtml(p.name)}
+            ${!isItemActive(p) ? '<span class="ml-1.5 text-[9px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300 font-mono font-bold">DLT=1</span>' : ''}
+          </td>
           <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800">${escapeHtml(p.category || '-')}</span></td>
           <td class="p-3 text-slate-600 dark:text-slate-300">${escapeHtml(p.client || '-')}</td>
           <td class="p-3 font-mono text-slate-500">${escapeHtml(p.year || '-')}</td>
           <td class="p-3"><span class="${getStatusBadgeClass(p.status)} badge-status">${escapeHtml(p.status)}</span></td>
           <td class="p-3 font-mono text-[10px] text-slate-500">${escapeHtml(p.access_type || 'MULTI ROLE')}</td>
           <td class="p-3 text-center">
-            <button onclick="togglePublish('${p.id}')" class="px-2 py-0.5 rounded text-[10px] font-bold ${p.is_published ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}">
-              ${p.is_published ? 'PUBLISHED' : 'DRAFT'}
-            </button>
+            ${isItemActive(p) ? `
+              <button onclick="togglePublish('${p.id}')" class="px-2 py-0.5 rounded text-[10px] font-bold ${p.is_published ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}">
+                ${p.is_published ? 'PUBLISHED' : 'DRAFT'}
+              </button>
+            ` : '<span class="text-slate-400 font-mono text-[10px]">TIDAK TAMPIL</span>'}
           </td>
           <td class="p-3 text-center">
-            <button onclick="toggleFeatured('${p.id}')" class="text-xs ${p.is_featured ? 'text-amber-500 font-bold' : 'text-slate-400'}">
-              ${p.is_featured ? '★ Ya' : '☆ Tidak'}
-            </button>
+            ${isItemActive(p) ? `
+              <button onclick="toggleFeatured('${p.id}')" class="text-xs ${p.is_featured ? 'text-amber-500 font-bold' : 'text-slate-400'}">
+                ${p.is_featured ? '★ Ya' : '☆ Tidak'}
+              </button>
+            ` : '-'}
           </td>
-          <td class="p-3 text-right space-x-1">
-            <button onclick="editProjectModal('${p.id}')" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 text-brand-600" title="Edit"><i data-lucide="edit" class="w-4 h-4"></i></button>
-            <button onclick="deleteProject('${p.id}')" class="p-1 rounded hover:bg-rose-100 dark:hover:bg-rose-950 text-rose-600" title="Hapus"><i data-lucide="trash" class="w-4 h-4"></i></button>
+          <td class="p-3 text-right space-x-1 whitespace-nowrap">
+            ${isItemActive(p) ? `
+              <button onclick="editProjectModal('${p.id}')" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 text-brand-600" title="Edit Proyek"><i data-lucide="edit" class="w-4 h-4"></i></button>
+              <button onclick="deleteProject('${p.id}')" class="p-1 rounded hover:bg-rose-100 dark:hover:bg-rose-950 text-rose-600" title="Hapus (Set DLT=1)"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            ` : `
+              <button onclick="restoreProject('${p.id}')" class="px-2.5 py-1 rounded bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold inline-flex items-center gap-1" title="Pulihkan Data ke Tampil (DLT=0)">
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Pulihkan
+              </button>
+            `}
           </td>
         </tr>
       `).join('');
@@ -1695,7 +1976,8 @@
 
         is_published: document.getElementById('form-project-published').checked,
         is_featured: document.getElementById('form-project-featured').checked,
-        is_deleted: false
+        is_deleted: false,
+        dlt: 0
       };
 
       if (id) {
@@ -1738,63 +2020,22 @@
       renderAdminDashboard();
     }
 
-    async function togglePublish(id) {
-      const proj = localProjects.find(p => p.id == id);
-      if (!proj) return;
-      proj.is_published = !proj.is_published;
-      localStorage.setItem('portfolio_projects_data', JSON.stringify(localProjects));
-
-      if (supabaseClient) {
-        try {
-          await supabaseClient.from('projects').update({ is_published: proj.is_published }).eq('id', id);
-        } catch (e) {
-          console.warn('Supabase publish update warning:', e);
-        }
-      }
-
-      renderPublicContent();
-      renderAdminDashboard();
-      await recordAudit(proj.is_published ? 'PUBLISH' : 'UNPUBLISH', 'Projects', proj.name);
-      showToast(`Status publikasi "${proj.name}" diperbarui.`);
-    }
-
-    async function toggleFeatured(id) {
-      const proj = localProjects.find(p => p.id == id);
-      if (!proj) return;
-      proj.is_featured = !proj.is_featured;
-      localStorage.setItem('portfolio_projects_data', JSON.stringify(localProjects));
-
-      if (supabaseClient) {
-        try {
-          await supabaseClient.from('projects').update({ is_featured: proj.is_featured }).eq('id', id);
-        } catch (e) {
-          console.warn('Supabase featured update warning:', e);
-        }
-      }
-
-      renderPublicContent();
-      renderAdminDashboard();
-      await recordAudit('UPDATE', 'Projects', `${proj.name} (Featured: ${proj.is_featured})`);
-      showToast(`Status featured "${proj.name}" diperbarui.`);
-    }
-
     function deleteProject(id) {
       const proj = localProjects.find(p => p.id == id);
       if (!proj) return;
 
       showConfirmModal(
-        'Hapus Proyek',
-        `Apakah Anda yakin ingin menghapus proyek "${proj.name}"? Data akan dihapus dari katalog publik dan database.`,
+        'Hapus Proyek (Set DLT=1)',
+        `Apakah Anda yakin ingin memindahkan proyek "${proj.name}" ke status DLT=1 (Tidak Tampil)? Data tidak akan tampil di frontend publik, namun dapat dipulihkan sewaktu-waktu di panel Sampah.`,
         async () => {
-          localProjects = localProjects.filter(p => p.id != id);
+          proj.dlt = 1;
+          proj.is_deleted = true;
           localStorage.setItem('portfolio_projects_data', JSON.stringify(localProjects));
 
           if (supabaseClient) {
             try {
-              const { error } = await supabaseClient.from('projects').update({ is_deleted: true }).eq('id', id);
-              if (error) {
-                await supabaseClient.from('projects').delete().eq('id', id);
-              }
+              const { error } = await supabaseClient.from('projects').update({ dlt: 1, is_deleted: true }).eq('id', id);
+              if (error) console.warn('Supabase dlt update warning:', error);
             } catch (e) {
               console.warn('Supabase delete warning:', e);
             }
@@ -1802,31 +2043,81 @@
 
           renderPublicContent();
           renderAdminDashboard();
-          await recordAudit('DELETE', 'Projects', proj.name);
-          showToast(`Proyek "${proj.name}" berhasil dihapus.`);
+          await recordAudit('SOFT_DELETE', 'Projects', `${proj.name} (Set DLT=1)`);
+          showToast(`Proyek "${proj.name}" diubah ke status DLT=1 (Tidak Tampil).`);
         }
       );
     }
 
-    // ================= CLIENTS CRUD =================
+    async function restoreProject(id) {
+      const proj = localProjects.find(p => p.id == id);
+      if (!proj) return;
+
+      proj.dlt = 0;
+      proj.is_deleted = false;
+      localStorage.setItem('portfolio_projects_data', JSON.stringify(localProjects));
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('projects').update({ dlt: 0, is_deleted: false }).eq('id', id);
+        } catch (e) {
+          console.warn('Supabase restore warning:', e);
+        }
+      }
+
+      renderPublicContent();
+      renderAdminDashboard();
+      await recordAudit('RESTORE', 'Projects', `${proj.name} (Set DLT=0)`);
+      showToast(`Proyek "${proj.name}" berhasil dipulihkan (DLT=0: Tampil).`);
+    }
+
+    // ================= CLIENTS CRUD & SOFT DELETE (DLT) =================
+    function setClientTrashView(isTrash) {
+      showClientTrash = isTrash;
+      const btnActive = document.getElementById('btn-client-view-active');
+      const btnTrash = document.getElementById('btn-client-view-trash');
+      if (btnActive && btnTrash) {
+        if (isTrash) {
+          btnActive.className = 'px-3 py-1.5 rounded-md text-slate-600 dark:text-slate-300 hover:text-brand-600';
+          btnTrash.className = 'px-3 py-1.5 rounded-md bg-white dark:bg-corp-900 font-bold text-rose-600 shadow-sm';
+        } else {
+          btnActive.className = 'px-3 py-1.5 rounded-md bg-white dark:bg-corp-900 font-bold text-brand-600 shadow-sm';
+          btnTrash.className = 'px-3 py-1.5 rounded-md text-slate-600 dark:text-slate-300 hover:text-rose-600';
+        }
+      }
+      renderAdminClientsList();
+    }
+
     function renderAdminClientsList() {
       const container = document.getElementById('admin-clients-list');
       if (!container) return;
 
-      const activeClients = localClients.filter(c => !c.is_deleted);
-      if (activeClients.length === 0) {
-        container.innerHTML = `<p class="col-span-full text-center text-slate-400 py-6">Belum ada klien tersimpan.</p>`;
+      const trashClients = localClients.filter(c => !isItemActive(c));
+      const activeClients = localClients.filter(c => isItemActive(c));
+
+      const trashBadge = document.getElementById('badge-client-trash-count');
+      if (trashBadge) trashBadge.innerText = trashClients.length;
+
+      const displayList = showClientTrash ? trashClients : activeClients;
+
+      if (displayList.length === 0) {
+        container.innerHTML = `<p class="col-span-full text-center text-slate-400 py-6">
+          ${showClientTrash ? 'Tidak ada data klien di dalam sampah (DLT=1).' : 'Belum ada klien aktif (DLT=0).'}
+        </p>`;
         return;
       }
 
-      container.innerHTML = activeClients.map(c => {
+      container.innerHTML = displayList.map(c => {
         const projectList = safeArray(c.project_ids);
         return `
-          <div class="p-4 rounded-xl bg-slate-50 dark:bg-corp-950 border border-slate-200 dark:border-slate-800 space-y-3 flex flex-col justify-between">
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-corp-950 border ${!isItemActive(c) ? 'border-rose-300 dark:border-rose-900/60 bg-rose-50/20' : 'border-slate-200 dark:border-slate-800'} space-y-3 flex flex-col justify-between">
             <div class="space-y-1.5">
               <div class="flex items-center justify-between">
                 <span class="font-mono text-[11px] font-bold text-brand-600">${escapeHtml(c.province || '-')} • ${escapeHtml(c.city || '-')}</span>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${c.sector === 'Pemerintah' ? 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'}">${escapeHtml(c.sector)}</span>
+                <div class="flex items-center gap-1">
+                  ${!isItemActive(c) ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300 font-mono font-bold">DLT=1</span>' : ''}
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold ${c.sector === 'Pemerintah' ? 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'}">${escapeHtml(c.sector)}</span>
+                </div>
               </div>
               <h4 class="font-bold text-sm text-slate-900 dark:text-white leading-tight">${escapeHtml(c.name)}</h4>
               <p class="text-xs text-slate-400 font-medium">Sistem Terpasang: ${projectList.length} Proyek</p>
@@ -1835,8 +2126,14 @@
               ${projectList.map(p => `<span class="px-2 py-0.5 rounded bg-white dark:bg-corp-900 border border-slate-200 dark:border-slate-800 text-[10px] font-semibold">${escapeHtml(p)}</span>`).join('')}
             </div>
             <div class="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2">
-              <button onclick="editClientModal('${c.id}')" class="px-2.5 py-1 rounded bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 text-[11px] font-semibold">Edit</button>
-              <button onclick="deleteClient('${c.id}')" class="px-2.5 py-1 rounded bg-rose-100 dark:bg-rose-950 hover:bg-rose-200 text-rose-700 dark:text-rose-300 text-[11px] font-semibold">Hapus</button>
+              ${isItemActive(c) ? `
+                <button onclick="editClientModal('${c.id}')" class="px-2.5 py-1 rounded bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 text-[11px] font-semibold">Edit</button>
+                <button onclick="deleteClient('${c.id}')" class="px-2.5 py-1 rounded bg-rose-100 dark:bg-rose-950 hover:bg-rose-200 text-rose-700 dark:text-rose-300 text-[11px] font-semibold">Hapus (DLT=1)</button>
+              ` : `
+                <button onclick="restoreClient('${c.id}')" class="px-3 py-1 rounded bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold flex items-center gap-1">
+                  <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Pulihkan Klien
+                </button>
+              `}
             </div>
           </div>
         `;
@@ -1849,7 +2146,7 @@
       const counter = document.getElementById('form-selected-projects-count');
       if (!container) return;
 
-      const activeProjects = localProjects.filter(p => !p.is_deleted);
+      const activeProjects = localProjects.filter(p => isItemActive(p));
       container.innerHTML = activeProjects.map(p => {
         const isChecked = selectedProjects.includes(p.name);
         return `
@@ -1920,7 +2217,9 @@
       const clientPayload = {
         province, city, name, slug, sector, logo,
         project_ids: selectedProjects,
-        is_deleted: false, is_active: true
+        is_deleted: false,
+        is_active: true,
+        dlt: 0
       };
 
       if (id) {
@@ -1967,51 +2266,106 @@
       if (!client) return;
 
       showConfirmModal(
-        'Hapus Klien / Mitra',
-        `Apakah Anda yakin ingin menghapus instansi "${client.name}" (${client.city || ''})?`,
+        'Hapus Klien (Set DLT=1)',
+        `Apakah Anda yakin ingin mengubah status klien "${client.name}" (${client.city || ''}) menjadi DLT=1 (Tidak Tampil)? Data dapat dipulihkan kapan pun melalui tab Sampah.`,
         async () => {
-          localClients = localClients.filter(c => c.id != id);
+          client.dlt = 1;
+          client.is_deleted = true;
           localStorage.setItem('portfolio_clients_data', JSON.stringify(localClients));
 
           if (supabaseClient) {
             try {
-              const { error } = await supabaseClient.from('clients').delete().eq('id', id);
-              if (error) {
-                await supabaseClient.from('clients').update({ is_deleted: true }).eq('id', id);
-              }
+              await supabaseClient.from('clients').update({ dlt: 1, is_deleted: true }).eq('id', id);
             } catch (e) {
-              console.warn('Supabase client delete warning:', e);
+              console.warn('Supabase client dlt update warning:', e);
             }
           }
 
           populateProvinceFilter();
           renderClients();
           renderAdminDashboard();
-          await recordAudit('DELETE', 'Clients', client.name);
-          showToast(`Klien "${client.name}" berhasil dihapus.`);
+          await recordAudit('SOFT_DELETE', 'Clients', `${client.name} (Set DLT=1)`);
+          showToast(`Klien "${client.name}" diubah ke status DLT=1 (Tidak Tampil).`);
         }
       );
     }
 
-    // ================= SKILLS CRUD =================
+    async function restoreClient(id) {
+      const client = localClients.find(c => c.id == id);
+      if (!client) return;
+
+      client.dlt = 0;
+      client.is_deleted = false;
+      localStorage.setItem('portfolio_clients_data', JSON.stringify(localClients));
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('clients').update({ dlt: 0, is_deleted: false }).eq('id', id);
+        } catch (e) {
+          console.warn('Supabase client restore warning:', e);
+        }
+      }
+
+      populateProvinceFilter();
+      renderClients();
+      renderAdminDashboard();
+      await recordAudit('RESTORE', 'Clients', `${client.name} (Set DLT=0)`);
+      showToast(`Klien "${client.name}" berhasil dipulihkan (DLT=0: Tampil).`);
+    }
+
+    // ================= SKILLS CRUD & SOFT DELETE (DLT) =================
+    function setSkillTrashView(isTrash) {
+      showSkillTrash = isTrash;
+      const btnActive = document.getElementById('btn-skill-view-active');
+      const btnTrash = document.getElementById('btn-skill-view-trash');
+      if (btnActive && btnTrash) {
+        if (isTrash) {
+          btnActive.className = 'px-3 py-1.5 rounded-md text-slate-600 dark:text-slate-300 hover:text-brand-600';
+          btnTrash.className = 'px-3 py-1.5 rounded-md bg-white dark:bg-corp-900 font-bold text-rose-600 shadow-sm';
+        } else {
+          btnActive.className = 'px-3 py-1.5 rounded-md bg-white dark:bg-corp-900 font-bold text-brand-600 shadow-sm';
+          btnTrash.className = 'px-3 py-1.5 rounded-md text-slate-600 dark:text-slate-300 hover:text-rose-600';
+        }
+      }
+      renderAdminSkillsTable();
+    }
+
     function renderAdminSkillsTable() {
       const tbody = document.getElementById('admin-skills-table-body');
       if (!tbody) return;
 
-      const activeSkills = localSkills.filter(s => s.is_active !== false);
-      if (activeSkills.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">Belum ada data keahlian.</td></tr>`;
+      const trashSkills = localSkills.filter(s => !isItemActive(s));
+      const activeSkills = localSkills.filter(s => isItemActive(s));
+
+      const trashBadge = document.getElementById('badge-skill-trash-count');
+      if (trashBadge) trashBadge.innerText = trashSkills.length;
+
+      const displayList = showSkillTrash ? trashSkills : activeSkills;
+
+      if (displayList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">
+          ${showSkillTrash ? 'Tidak ada keahlian di dalam sampah (DLT=1).' : 'Belum ada data keahlian aktif (DLT=0).'}
+        </td></tr>`;
         return;
       }
 
-      tbody.innerHTML = activeSkills.map(s => `
-        <tr class="hover:bg-slate-50/80 dark:hover:bg-corp-900/50">
-          <td class="p-3 font-semibold text-slate-900 dark:text-white">${escapeHtml(s.name)}</td>
+      tbody.innerHTML = displayList.map(s => `
+        <tr class="hover:bg-slate-50/80 dark:hover:bg-corp-900/50 ${!isItemActive(s) ? 'bg-rose-50/30 dark:bg-rose-950/20' : ''}">
+          <td class="p-3 font-semibold text-slate-900 dark:text-white">
+            ${escapeHtml(s.name)}
+            ${!isItemActive(s) ? '<span class="ml-1.5 text-[9px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300 font-mono font-bold">DLT=1</span>' : ''}
+          </td>
           <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">${escapeHtml(s.category)}</span></td>
           <td class="p-3 font-mono text-brand-600 font-bold">${s.proficiency_level || s.level || 90}%</td>
-          <td class="p-3 text-right space-x-1">
-            <button onclick="editSkillModal('${s.id}')" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 text-brand-600" title="Edit"><i data-lucide="edit" class="w-4 h-4"></i></button>
-            <button onclick="deleteSkill('${s.id}')" class="p-1 rounded hover:bg-rose-100 dark:hover:bg-rose-950 text-rose-600" title="Hapus"><i data-lucide="trash" class="w-4 h-4"></i></button>
+          <td class="p-3 text-right space-x-1 whitespace-nowrap">
+            ${isItemActive(s) ? `
+              <button onclick="editSkillModal('${s.id}')" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-800 text-brand-600" title="Edit"><i data-lucide="edit" class="w-4 h-4"></i></button>
+              <button onclick="deleteSkill('${s.id}')" class="p-1 rounded hover:bg-rose-100 dark:hover:bg-rose-950 text-rose-600" title="Hapus (DLT=1)"><i data-lucide="trash" class="w-4 h-4"></i></button>
+            ` : `
+              <button onclick="restoreSkill('${s.id}')" class="px-2.5 py-1 rounded bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold inline-flex items-center gap-1">
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Pulihkan
+              </button>
+            `}
           </td>
         </tr>
       `).join('');
@@ -2057,7 +2411,8 @@
         name,
         category,
         proficiency_level,
-        is_active: true
+        is_active: true,
+        dlt: 0
       };
 
       if (id) {
@@ -2103,29 +2458,49 @@
       if (!skill) return;
 
       showConfirmModal(
-        'Hapus Keahlian',
-        `Apakah Anda yakin ingin menghapus kompetensi "${skill.name}"?`,
+        'Hapus Keahlian (Set DLT=1)',
+        `Apakah Anda yakin ingin memindahkan keahlian "${skill.name}" ke status DLT=1 (Tidak Tampil)? Data dapat dipulihkan kapan saja di tab Sampah.`,
         async () => {
-          localSkills = localSkills.filter(s => s.id != id);
+          skill.dlt = 1;
+          skill.is_active = false;
           localStorage.setItem('portfolio_skills_data', JSON.stringify(localSkills));
 
           if (supabaseClient) {
             try {
-              const { error } = await supabaseClient.from('skills').delete().eq('id', id);
-              if (error) {
-                await supabaseClient.from('skills').delete().eq('name', skill.name);
-              }
+              await supabaseClient.from('skills').update({ dlt: 1, is_active: false }).eq('id', id);
             } catch (e) {
-              console.warn('Supabase skill delete warning:', e);
+              console.warn('Supabase skill dlt update warning:', e);
             }
           }
 
           renderSkills();
           renderAdminDashboard();
-          await recordAudit('DELETE', 'Skills', skill.name);
-          showToast(`Keahlian "${skill.name}" berhasil dihapus.`);
+          await recordAudit('SOFT_DELETE', 'Skills', `${skill.name} (Set DLT=1)`);
+          showToast(`Keahlian "${skill.name}" diubah ke status DLT=1 (Tidak Tampil).`);
         }
       );
+    }
+
+    async function restoreSkill(id) {
+      const skill = localSkills.find(s => s.id == id);
+      if (!skill) return;
+
+      skill.dlt = 0;
+      skill.is_active = true;
+      localStorage.setItem('portfolio_skills_data', JSON.stringify(localSkills));
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('skills').update({ dlt: 0, is_active: true }).eq('id', id);
+        } catch (e) {
+          console.warn('Supabase skill restore warning:', e);
+        }
+      }
+
+      renderSkills();
+      renderAdminDashboard();
+      await recordAudit('RESTORE', 'Skills', `${skill.name} (Set DLT=0)`);
+      showToast(`Keahlian "${skill.name}" berhasil dipulihkan (DLT=0: Tampil).`);
     }
 
     // ================= MODAL KONFIRMASI CUSTOM =================
@@ -2209,6 +2584,7 @@
     }
 
     async function saveProfileSettings() {
+      // 1. Site Settings & Profile
       siteSettings.hero_stmt = document.getElementById('setting-hero-stmt').value.trim();
       siteSettings.wa = document.getElementById('setting-wa-number').value.trim();
       siteSettings.email = document.getElementById('setting-email-addr').value.trim();
@@ -2224,25 +2600,43 @@
       profileData.stat_years = document.getElementById('setting-stat-years').value.trim();
       profileData.stat_audit = document.getElementById('setting-stat-audit').value.trim();
 
+      // 2. Status Konsultasi Dinamis & Waktu Operasional
+      const consultKey = document.getElementById('setting-consult-status-key').value;
+      const consultMap = STATUS_MAP[consultKey] || STATUS_MAP.online;
+      consultationConfig = {
+        status_key: consultKey,
+        status_label: consultMap.label,
+        custom_note: document.getElementById('setting-consult-custom-note').value.trim(),
+        use_time_limit: document.getElementById('setting-consult-use-time').checked,
+        start_time: document.getElementById('setting-consult-start-time').value || '08:30',
+        end_time: document.getElementById('setting-consult-end-time').value || '17:00',
+        timezone: document.getElementById('setting-consult-timezone').value || 'WIB'
+      };
+
+      // Persist to LocalStorage
       localStorage.setItem('portfolio_profile_content', JSON.stringify(profileData));
       localStorage.setItem('portfolio_site_settings', JSON.stringify(siteSettings));
+      localStorage.setItem('portfolio_consultation_status', JSON.stringify(consultationConfig));
 
       applyProfileData();
       applySiteVisibility();
+      applyConsultationStatusVisuals();
 
+      // Persist to Supabase
       if (supabaseClient) {
         try {
           await supabaseClient.from('site_settings').upsert([
-            { key: 'company_profile', value: profileData },
-            { key: 'contact_config', value: siteSettings }
+            { key: 'company_profile', value: profileData, description: 'Profil Konsultan' },
+            { key: 'contact_config', value: siteSettings, description: 'Konfigurasi Kontak' },
+            { key: 'consultation_status', value: consultationConfig, description: 'Status Konsultasi Dinamis & Jam Operasional' }
           ]);
         } catch (e) {
           console.warn('Supabase site_settings error:', e);
         }
       }
 
-      await recordAudit('UPDATE', 'Settings', 'Profile & Site Settings Updated');
-      showToast('Seluruh profil dan pengaturan visibilitas berhasil disimpan ke Database!');
+      await recordAudit('UPDATE', 'Settings', `Status Konsultasi (${consultMap.label}) & Pengaturan Profil Diperbarui`);
+      showToast('Status konsultasi & pengaturan profil berhasil disimpan ke Database!');
     }
 
     function applyContactLinks(wa, email, msg) {
@@ -2294,7 +2688,7 @@
         Technical: 'terminal'
       };
 
-      const activeSkills = localSkills.filter(s => s.is_active !== false);
+      const activeSkills = localSkills.filter(s => isItemActive(s));
 
       container.innerHTML = categories.map(cat => {
         const items = activeSkills.filter(s => s.category === cat);
@@ -2329,7 +2723,7 @@
       const container = document.getElementById('featured-projects-grid');
       if (!container) return;
 
-      const featured = localProjects.filter(p => p.is_featured && p.is_published && !p.is_deleted);
+      const featured = localProjects.filter(p => p.is_featured && p.is_published && isItemActive(p));
       if (featured.length === 0) {
         container.innerHTML = `<p class="col-span-full text-center text-xs text-slate-400 py-6">Belum ada proyek featured yang dipublikasikan.</p>`;
         return;
@@ -2365,7 +2759,7 @@
       const select = document.getElementById('project-category-filter');
       if (!select) return;
 
-      const categories = Array.from(new Set(localProjects.filter(p => !p.is_deleted && p.category).map(p => p.category)));
+      const categories = Array.from(new Set(localProjects.filter(p => isItemActive(p) && p.category).map(p => p.category)));
       const currentVal = select.value;
       select.innerHTML = '<option value="ALL">Semua Kategori</option>' + categories.map(cat => `
         <option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>
@@ -2379,7 +2773,7 @@
       const status = document.getElementById('project-status-filter')?.value || 'ALL';
       const sort = document.getElementById('project-sort-filter')?.value || 'default';
 
-      let filtered = localProjects.filter(p => p.is_published && !p.is_deleted);
+      let filtered = localProjects.filter(p => p.is_published && isItemActive(p));
 
       if (search) {
         filtered = filtered.filter(p => 
@@ -2400,7 +2794,7 @@
       }
 
       const countLabel = document.getElementById('project-count-label');
-      if (countLabel) countLabel.innerText = `Menampilkan ${filtered.length} dari ${localProjects.filter(p => p.is_published && !p.is_deleted).length} proyek`;
+      if (countLabel) countLabel.innerText = `Menampilkan ${filtered.length} dari ${localProjects.filter(p => p.is_published && isItemActive(p)).length} proyek`;
 
       const container = document.getElementById('all-projects-grid');
       const emptyState = document.getElementById('projects-empty-state');
@@ -2488,7 +2882,7 @@
       const search = (document.getElementById('client-search-input')?.value || '').toLowerCase();
       const provinceFilter = document.getElementById('client-province-filter')?.value || 'ALL';
 
-      let filtered = localClients.filter(c => !c.is_deleted);
+      let filtered = localClients.filter(c => isItemActive(c));
       if (activeClientSegment !== 'all') {
         filtered = filtered.filter(c => c.sector === activeClientSegment);
       }
@@ -2738,11 +3132,11 @@
     }
 
     function renderAdminDashboard() {
-      const activeProjects = localProjects.filter(p => !p.is_deleted);
+      const activeProjects = localProjects.filter(p => isItemActive(p));
       const prodProjects = activeProjects.filter(p => p.status === 'PRODUCTION');
       const soonProjects = activeProjects.filter(p => p.status === 'SOON' || p.status === 'PLANNED');
-      const activeClients = localClients.filter(c => !c.is_deleted);
-      const activeSkills = localSkills.filter(s => s.is_active !== false);
+      const activeClients = localClients.filter(c => isItemActive(c));
+      const activeSkills = localSkills.filter(s => isItemActive(s));
 
       if (document.getElementById('stat-total-projects')) document.getElementById('stat-total-projects').innerText = activeProjects.length;
       if (document.getElementById('stat-prod-projects')) document.getElementById('stat-prod-projects').innerText = prodProjects.length;
@@ -2886,6 +3280,10 @@
         sessionStorage.setItem('visited_session', 'true');
       }
 
+      const map = STATUS_MAP[consultationConfig.status_key || 'online'] || STATUS_MAP.online;
+      const statusLabel = consultationConfig.status_label || map.label;
+      const scheduleText = getFormattedScheduleText();
+
       tickerContent.innerHTML = `
         <span class="inline-flex items-center gap-1.5 font-semibold text-white">
           <i data-lucide="calendar" class="w-3.5 h-3.5 text-brand-400"></i> ${dayName}, ${dateNum} ${monthName} ${year}
@@ -2899,8 +3297,8 @@
           <i data-lucide="users" class="w-3.5 h-3.5 text-sky-400"></i> Total Kunjungan: <strong class="text-white">${visits.toLocaleString('id-ID')} Kali</strong>
         </span>
         <span class="text-slate-500">•</span>
-        <span class="inline-flex items-center gap-1.5 text-amber-300">
-          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-amber-400"></i> Status Konsultasi: <strong>Online & Siap Berkolaborasi</strong>
+        <span class="inline-flex items-center gap-1.5 text-amber-300 font-medium">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-amber-400"></i> Status Konsultasi: <strong>${statusLabel}${scheduleText}</strong>
         </span>
         <span class="text-slate-500">•</span>
         <span class="inline-flex items-center gap-1.5 text-slate-300">
@@ -2912,10 +3310,11 @@
 
     function refreshVisitorAndDate() {
       renderTickerInfo();
-      showToast('Status waktu dan kunjungan diperbarui.');
+      applyConsultationStatusVisuals();
+      showToast('Status waktu, ketersediaan konsultasi & kunjungan diperbarui.');
     }
 
-    // ================= AUTH MANAGEMENT =================
+    // ================= AUTH MANAGEMENT & LUPA PASSWORD =================
     function openAuthModal() {
       if (currentUser) {
         if (supabaseClient && supabaseClient.auth) {
@@ -2927,11 +3326,31 @@
         showToast('Anda telah keluar dari sesi administrator.');
         return;
       }
+      toggleForgotPasswordView(false);
       document.getElementById('auth-modal')?.classList.remove('hidden');
     }
 
     function closeAuthModal() {
       document.getElementById('auth-modal')?.classList.add('hidden');
+    }
+
+    function toggleForgotPasswordView(isForgot) {
+      const loginBox = document.getElementById('auth-login-box');
+      const forgotBox = document.getElementById('auth-forgot-box');
+      const title = document.getElementById('auth-modal-title');
+      if (isForgot) {
+        if (loginBox) loginBox.classList.add('hidden');
+        if (forgotBox) forgotBox.classList.remove('hidden');
+        if (title) title.innerText = 'Reset Kata Sandi Admin';
+        const currEmail = document.getElementById('auth-email')?.value;
+        const forgotInput = document.getElementById('forgot-auth-email');
+        if (currEmail && forgotInput) forgotInput.value = currEmail;
+      } else {
+        if (forgotBox) forgotBox.classList.add('hidden');
+        if (loginBox) loginBox.classList.remove('hidden');
+        if (title) title.innerText = 'Autentikasi Administrator';
+      }
+      lucide.createIcons();
     }
 
     async function handleAuthLogin(event) {
@@ -2961,6 +3380,33 @@
       closeAuthModal();
       await recordAudit('LOGIN', 'Auth', currentUser.email);
       showToast('Masuk sesi lokal Administrator.');
+    }
+
+    async function handleForgotPasswordSubmit(event) {
+      event.preventDefault();
+      const email = document.getElementById('forgot-auth-email').value.trim();
+      if (!email) return;
+
+      if (supabaseClient && supabaseClient.auth) {
+        try {
+          const redirectUrl = window.location.origin + window.location.pathname;
+          const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+            redirectTo: redirectUrl
+          });
+          if (error) throw error;
+          showToast(`Tautan reset sandi dikirim ke ${email}. Silakan periksa inbox/spam email.`);
+          toggleForgotPasswordView(false);
+          closeAuthModal();
+          await recordAudit('PASSWORD_RESET_REQ', 'Auth', `Requested reset for ${email}`);
+          return;
+        } catch (e) {
+          showToast('Reset password: ' + e.message);
+          return;
+        }
+      }
+
+      showToast('Instruksi pemulihan: Buka Supabase Dashboard > Auth > Users untuk ubah kata sandi.');
+      toggleForgotPasswordView(false);
     }
 
     function saveSupabaseConfig() {
